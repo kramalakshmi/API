@@ -11,6 +11,38 @@ def get_req():
   response = requests.get(url, headers= headers)
   assert response.status_code ==200
   json_data = response.json()
-  print("Json response body: "+ str(json_data))
+  json_str = json.dumps(json_data, indent=4)
+  print("Json put response body: " , json_str)
 
+def post_req(user_id):
+  data ={
+    "name":"Naveen",
+  "email": "naveen@auto.com",
+  "gender":"Male",
+  "status":"Inactive"
+  }
+  url = base_url+f"/public/v2/users"
+  headers = {"Authorization" :auth_token}
+  response = requests.post(url,json=data, headers= headers)
+  assert response.status_code ==201
+  json_data = response.json()
+  json_str = json.dumps(json_data, indent=4)
+  print("Json put response body: " , json_str)
+  
+def put_req(user_id):
+  data ={
+    "name":"Naveen",
+  "email": "naveen@auto.com",
+  "gender":"Male",
+  "status":"Inactive"
+  }
+  url = base_url+f"/public/v2/users/{user_id}"
+  headers = {"Authorization" :auth_token}
+  response = requests.put(url,json=data, headers= headers)
+  assert response.status_code ==200
+  json_data = response.json()
+  json_str = json.dumps(json_data, indent=4)
+  print("Json put response body: " , json_str)
+
+post_req()
 get_req()
