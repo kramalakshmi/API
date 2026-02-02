@@ -9,7 +9,7 @@ def get_req():
   url = base_url+"public/v2/users/"
   headers = {"Authorization" :auth_token}
   response = requests.get(url, headers= headers)
-  asert response.status_code ==200
+  assert response.status_code ==200
   json_data = response.json()
   print("Json response body: ".json_data)
 
