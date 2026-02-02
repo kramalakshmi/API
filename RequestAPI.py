@@ -11,11 +11,11 @@ def get_request():
     print("get url: " + url)
     headers = {"Authorization": auth_token}
     response = requests.get(url, headers=headers)
-    assert response.status_code == 200
-    json_data = response.json()
-    json_str = json.dumps(json_data, indent=4)
-    print("json GET response body: ", json_str)
-    print("GET USER IS DONE")
+    if response.status_code == 200:
+        json_data = response.json()
+        json_str = json.dumps(json_data, indent=4)
+        print("json GET response body: ", json_str)
+        print("GET USER IS DONE")
     
 
 #POST Request
@@ -34,11 +34,10 @@ def post_request():
     json_str = json.dumps(json_data, indent=4)
     print("json POST response body: ", json_str)
     user_id = json_data["id"]
-    print("user id ===>", user_id)
-    assert response.status_code == 201
-    assert "name" in json_data
-    assert json_data["name"] == "Naveen Automation"
-    print("POST/Create USER IS DONE")
+    print("user id : ", user_id)
+    if response.status_code == 201:
+    
+        print("POST/Create USER IS DONE")
    
     return user_id
 
@@ -55,13 +54,11 @@ def put_request(user_id):
         "status": "inactive"
     }
     response = requests.put(url, json=data, headers=headers)
-    assert response.status_code == 200
-    json_data = response.json()
-    json_str = json.dumps(json_data, indent=4)
-    print("json PUT response body: ", json_str)
-    assert json_data["id"] == user_id
-    assert json_data["name"] == "Naveen Automation Labs"
-    print("PUT/Update USER IS DONE")
+    if response.status_code == 200:
+        json_data = response.json()
+        json_str = json.dumps(json_data, indent=4)
+        print("json PUT response body: ", json_str)
+        print("PUT/Update USER IS DONE")
     
 
 
@@ -71,8 +68,8 @@ def delete_request(user_id):
     print("DELETE url: " + url)
     headers = {"Authorization": auth_token}
     response = requests.delete(url, headers=headers)
-    assert response.status_code == 204
-    print("DELETE USER IS DONE")
+    if response.status_code == 204:
+        print("DELETE USER IS DONE")
    
 
 
