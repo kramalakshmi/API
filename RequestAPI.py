@@ -24,8 +24,8 @@ def post_request():
     print("post url: " + url)
     headers = {"Authorization": auth_token}
     data = {
-        "name": "Naveen",
-        "email": "naveen@aa.com",
+        "name": "Naveena",
+        "email": "naveean@aa.com",
         "gender": "male",
         "status": "active"
     }
@@ -48,8 +48,8 @@ def put_request(user_id):
     print("PUT url: " + url)
     headers = {"Authorization": auth_token}
     data = {
-        "name": "Naveen",
-        "email": "naveen@aa.com",
+        "name": "Naveena",
+        "email": "naveena@aa.com",
         "gender": "male",
         "status": "inactive"
     }
