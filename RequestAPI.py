@@ -44,5 +44,5 @@ def put_req(user_id):
   json_str = json.dumps(json_data, indent=4)
   print("Json put response body: " , json_str)
 
-post_req()
+#post_req()
 get_req()
