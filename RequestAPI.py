@@ -14,7 +14,7 @@ def get_req():
   json_str = json.dumps(json_data, indent=4)
   print("Json put response body: " , json_str)
 
-def post_req(user_id):
+def post_req():
   data ={
     "name":"Naveen",
   "email": "naveen@auto.com",
