@@ -11,6 +11,6 @@ def get_req():
   response = requests.get(url, headers= headers)
   assert response.status_code ==200
   json_data = response.json()
-  print("Json response body: "+json_data)
+  print("Json response body: "+ str(json_data))
 
 get_req()
