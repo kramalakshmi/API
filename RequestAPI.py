@@ -47,3 +47,4 @@ def put_req(user_id):
 #post_req()
 get_req()
 put_req(8355242)
+get_req()
