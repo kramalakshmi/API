@@ -1,5 +1,5 @@
-#import requests
-#import json
+import requests
+import json
 
 base_url ="https://gorest.co.in"
 #Auth token
