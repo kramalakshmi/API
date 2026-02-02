@@ -34,7 +34,7 @@ def put_req(user_id):
     "name":"Naveen",
   "email": "naveen@auto.com",
   "gender":"Male",
-  "status":"Inactive"
+  "status":"active"
   }
   url = base_url+f"/public/v2/users/{user_id}"
   headers = {"Authorization" :auth_token}
@@ -46,3 +46,4 @@ def put_req(user_id):
 
 #post_req()
 get_req()
+put_req(8355242)
