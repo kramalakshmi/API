@@ -4,7 +4,8 @@ def main():
     test_dir = pathlib.Path("tests")
     test_dir.mkdir(exist_ok=True)
     test_file = test_dir / "test_create.py"
-    commit_file(str(test_file), "Test")
+    test_file.write_text("test")
+    #commit_file(str(test_file), "Test")
 
 
 if __name__ == "__main__":
