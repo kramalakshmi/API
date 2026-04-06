@@ -1,10 +1,8 @@
 name: Generate Unit Tests
 
 on:
-  workflow_dispatch:
-  push:
-    branches:
-      - main
+  pull_request:
+    types: [opened, synchronize]
 
 jobs:
   generate-tests:
@@ -21,7 +19,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install openai PyGithub
+          pip install pytest openai 
 
       - name: Run test generator agent
         env:
