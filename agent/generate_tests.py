@@ -7,8 +7,18 @@ import os
 
 def main():
     TOKEN = os.getenv("GITHUB_TOKEN")
+    g = Github(TOKEN)
+
     repo = g.get_repo("kramalakshmi/API")
-    #src_dir = pathlib.Path("src")
+
+    src_dir = Path("src")
+    test_dir = Path("tests")
+    test_dir.mkdir(exist_ok=True)
+
+    test_file = test_dir / f"test_{file.stem}.py"
+    commit_file(str(test_file), "Hello GitHub! This file was written using PyGithub.")
+
+    '''src_dir = pathlib.Path("src")
     test_dir = pathlib.Path("tests")
     test_dir.mkdir(exist_ok=True)
     test_file = test_dir / "te_create.py"
@@ -18,8 +28,22 @@ def main():
     file_path = "tests/test_create.txt"
     commit_msg = "Automated commit from Python"
     file_content = "Hello GitHub! This file was written using PyGithub."
+    '''
+    #write_to_github(file_path, commit_msg, file_content)
+def commit_file(path, content):
+    g = Github(TOKEN)
+    repo = g.get_repo(REPO)
 
-    write_to_github(file_path, commit_msg, file_content)
+    try:
+        existing = repo.get_contents(path)
+        repo.update_file(
+            path, "Update generated tests", content, existing.sha
+        )
+    except:
+        repo.create_file(
+            path, "Add generated tests", content
+        )
+
 
 def write_to_github(path, message, content, branch="main"):
     try:
