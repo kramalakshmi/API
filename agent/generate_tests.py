@@ -6,6 +6,8 @@ from openai import OpenAI
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 MODEL = "gpt-4o-mini"
+TOKEN = os.getenv("PAT")
+auth = Auth.Token(TOKEN)
 
 
 def generate_tests_for_file(file_path):
@@ -43,8 +45,8 @@ def main():
 
 
 def commit_file(path, content):
-    g = Github(TOKEN)
-    repo = g.get_repo(REPO)
+    g = Github(auth=auth)
+    repo = g.get_repo("kramalakshmi/API")
 
     try:
         existing = repo.get_contents(path)
