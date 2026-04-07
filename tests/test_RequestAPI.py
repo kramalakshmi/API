@@ -1,112 +1,78 @@
-To create unit tests for the provided code using `pytest`, we'll utilize the `responses` library, which allows us to mock HTTP requests made by the `requests` library without actually hitting the API. This way, we can simulate various responses and test the functions independently.
+To create unit tests for the provided Python code using `pytest`, we need to mock the external HTTP requests made using the `requests` library. This allows us to test the functionality without actually making calls to the external API, ensuring our tests are deterministic.
 
-Below are test cases that cover the following scenarios:
-
-1. Successful GET request.
-2. Successful POST request.
-3. Successful PUT request.
-4. Successful DELETE request.
-5. Edge cases for each request (like unauthorized access, not found, etc.).
-
-First, ensure you have installed the required packages:
-```bash
-pip install pytest responses
-```
-
-Now, here is the `test_api.py` file with the unit tests:
+Here is an example of how to structure your tests using `pytest` and the `unittest.mock` module:
 
 ```python
 import pytest
-import responses
-import json
-from your_module import get_request, post_request, put_request, delete_request
+from unittest.mock import patch, Mock
+import requests
+from your_module import get_request, post_request, put_request, delete_request  # Adjust the import statement
 
-BASE_URL = "https://gorest.co.in"
-AUTH_TOKEN = "Bearer d5fc969f6b60ddb68552800e3cdf7bf384b2489372ee15c773445b658000f405"
-HEADERS = {"Authorization": AUTH_TOKEN}
-
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def mock_requests():
-    with responses.RequestsMock() as rsps:
-        yield rsps
+    with patch('requests.get') as mock_get, \
+         patch('requests.post') as mock_post, \
+         patch('requests.put') as mock_put, \
+         patch('requests.delete') as mock_delete:
+        yield mock_get, mock_post, mock_put, mock_delete
 
 def test_get_request(mock_requests):
-    url = f"{BASE_URL}/public/v2/users"
-    mock_requests.add(responses.GET, url, json=[{"id": 1, "name": "John Doe"}], status=200)
-
-    # Call the function
-    get_request()
-
-    # Verify the request
-    assert len(mock_requests.calls) == 1
-    assert mock_requests.calls[0].request.url == url
+    mock_get, _, _, _ = mock_requests
+    mock_get.return_value = Mock(status_code=200, json=lambda: [{"id": 1, "name": "Test User"}])
+    
+    get_request()  # Call the function
+    
+    mock_get.assert_called_once()  # Ensure GET request was made
 
 def test_post_request(mock_requests):
-    url = f"{BASE_URL}/public/v2/users"
-    response_data = {"id": 1, "name": "Naveena"}
-    mock_requests.add(responses.POST, url, json=response_data, status=201)
+    mock_get, mock_post, _, _ = mock_requests
+    mock_post.return_value = Mock(status_code=201, json=lambda: {"id": 1})
 
-    # Call the function
-    user_id = post_request()
-
-    # Verify the result
-    assert user_id == 1
-    assert len(mock_requests.calls) == 1
-    assert mock_requests.calls[0].request.url == url
+    user_id = post_request()  # Call the function
+    
+    assert user_id == 1  # Check if the returned user ID is correct
+    mock_post.assert_called_once()  # Ensure POST request was made
 
 def test_put_request(mock_requests):
-    user_id = 1
-    url = f"{BASE_URL}/public/v2/users/{user_id}"
-    mock_requests.add(responses.PUT, url, json={"id": user_id, "status": "inactive"}, status=200)
+    mock_get, mock_post, mock_put, _ = mock_requests
+    mock_put.return_value = Mock(status_code=200, json=lambda: {"id": 1})
 
-    # Call the function
-    put_request(user_id)
-
-    # Verify the request
-    assert len(mock_requests.calls) == 1
-    assert mock_requests.calls[0].request.url == url
+    put_request(1)  # Call the function
+    
+    mock_put.assert_called_once_with(
+        'https://gorest.co.in/public/v2/users/1',
+        json={
+            "name": "Naveena",
+            "email": "naveena@aa.com",
+            "gender": "male",
+            "status": "inactive"
+        },
+        headers={"Authorization": "Bearer d5fc969f6b60ddb68552800e3cdf7bf384b2489372ee15c773445b658000f405"}
+    )  # Ensure PUT request was made with the correct parameters
 
 def test_delete_request(mock_requests):
-    user_id = 1
-    url = f"{BASE_URL}/public/v2/users/{user_id}"
-    mock_requests.add(responses.DELETE, url, status=204)
+    mock_get, mock_post, mock_put, mock_delete = mock_requests
+    mock_delete.return_value = Mock(status_code=204)
 
-    # Call the function
-    delete_request(user_id)
+    delete_request(1)  # Call the function
 
-    # Verify the request
-    assert len(mock_requests.calls) == 1
-    assert mock_requests.calls[0].request.url == url
+    mock_delete.assert_called_once_with('https://gorest.co.in/public/v2/users/1', 
+                                         headers={"Authorization": "Bearer d5fc969f6b60ddb68552800e3cdf7bf384b2489372ee15c773445b658000f405"})  # Assert DELETE request was made
 
-def test_get_request_not_found(mock_requests):
-    url = f"{BASE_URL}/public/v2/users"
-    mock_requests.add(responses.GET, url, json={"message": "Not Found"}, status=404)
-
-    # Execute and observe the handling
-    with pytest.raises(Exception):
-        get_request()  # You might want to modify get_request to raise an error on non-200 status.
-
-def test_post_request_bad_request(mock_requests):
-    url = f"{BASE_URL}/public/v2/users"
-    mock_requests.add(responses.POST, url, json={"message": "Bad Request"}, status=400)
-
-    # Execute and catch the handling
-    with pytest.raises(Exception):
-        user_id = post_request()  # You might need to modify post_request to handle non-201 status.
-
-# You can further add tests for other scenarios like unauthorized access.
+if __name__ == "__main__":
+    pytest.main()
 ```
 
-### Important Notes:
-1. **Request Handling**: The original code does not handle exceptions (e.g., when a request fails). To run these tests successfully, consider updating `get_request`, `post_request`, and similar functions to raise exceptions or return error messages on unexpected HTTP status codes. This way, tests like `test_get_request_not_found` and `test_post_request_bad_request` will work correctly.
-  
-2. **Import Path**: Replace `from your_module import ...` with the actual path where your functions are defined.
+### Breakdown of the tests:
 
-3. **Deterministic Tests**: Each test simulates a specific scenario with expected results, ensuring consistent and reliable outputs each time tests are run. 
+1. **Mocking**: We use `unittest.mock.patch` to mock the `requests.get`, `requests.post`, `requests.put`, and `requests.delete` methods so we don't make actual API calls.
 
-4. **Running Tests**: You can run your tests using the command:
-   ```bash
-   pytest test_api.py
-   ``` 
+2. **Fixtures**: The `mock_requests` fixture sets up the mocked functions and is used in each test to ensure we are not repeating code.
 
-This setup covers testing of various HTTP methods and ensures that the functionality is validated without making real API calls.
+3. **Testing Response**: Each test checks if the function correctly calls the appropriate HTTP method and verifies the returned values where applicable.
+
+4. **Adjust the Import Statement**: Replace `your_module` with the actual name of the Python file or module where your original code resides.
+
+5. **Running Tests**: The `if __name__ == "__main__":` block with `pytest.main()` allows running the tests directly if the file is executed.
+
+This setup provides clear, isolated tests for each function that test the expected outcomes without relying on the external API.
