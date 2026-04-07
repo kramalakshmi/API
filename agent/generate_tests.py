@@ -9,7 +9,7 @@ def main():
     test_dir.mkdir(exist_ok=True)
 
     for file in src_dir.glob("*.py"):
-        print(str(file))
+        print(str(Path(file).stem))
         '''
         test_code = generate_tests_for_file(file)
         test_file = test_dir / f"test_{file.stem}.py"
