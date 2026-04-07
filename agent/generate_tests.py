@@ -11,8 +11,8 @@ def main():
 
     repo = g.get_repo("kramalakshmi/API")
 
-    src_dir = Path("src")
-    test_dir = Path("tests")
+    src_dir = pathlib.Path("src")
+    test_dir = pathlib.Path("tests")
     test_dir.mkdir(exist_ok=True)
 
     test_file = test_dir / f"test_{file.stem}.py"
