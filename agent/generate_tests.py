@@ -5,7 +5,7 @@ def main():
     test_dir.mkdir(exist_ok=True)
     test_file = test_dir / "test_create.py"
     test_file.write_text("test")
-    print("test "+test_dir)
+    print("test "+str(test_dir))
     #commit_file(str(test_file), "Test")
 
 
