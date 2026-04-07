@@ -15,7 +15,7 @@ def main():
     test_dir = pathlib.Path("tests")
     test_dir.mkdir(exist_ok=True)
 
-    test_file = test_dir / f"test_{file.stem}.py"
+    test_file = test_dir / "test_file.py"
     commit_file(str(test_file), "Hello GitHub! This file was written using PyGithub.")
 
     '''src_dir = pathlib.Path("src")
