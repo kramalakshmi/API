@@ -14,8 +14,9 @@ def main():
 
 
 # Push changes to GitHub
-    g = Github(token)
-    repo = g.get_repo("kramalakshmi/API")
+    #g = Github(token)
+    auth=github.Auth.Token(token)
+    repo = auth.get_repo("kramalakshmi/API")
 
     src_dir = pathlib.Path("src")
     test_dir = pathlib.Path("tests")
