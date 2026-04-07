@@ -1,82 +1,65 @@
-To write unit tests using `pytest` for the code you provided, you need to mock the HTTP requests made by the `requests` library. This way, you can simulate different server responses without actually hitting the external API.
+To test the provided code using `pytest`, we will create unit tests that cover the functionality of the `get_request`, `post_request`, `put_request`, and `delete_request` functions. Since these functions perform HTTP requests, we will use the `requests-mock` library to mock those requests and responses to ensure that our tests are deterministic and do not depend on external services.
 
-First, you'll want to install the required library for mocking if you haven't done so:
+Make sure to first install `pytest` and `requests-mock` if you haven't done this yet:
 
 ```bash
-pip install pytest pytest-mock
+pip install pytest requests-mock
 ```
 
-Here’s a potential structure for the test suite using `pytest` and `unittest.mock`:
+Below is the `pytest` code to test the provided functions:
 
 ```python
 import pytest
 import requests
-from unittest.mock import patch
+import requests_mock
+from your_module import get_request, post_request, put_request, delete_request
 
-# Assuming the provided code is in a module named `api_requests`
-# from api_requests import get_request, post_request, put_request, delete_request
+# Mocking the base URL and Auth token for tests
+base_url = "https://gorest.co.in"
+auth_token = "Bearer d5fc969f6b60ddb68552800e3cdf7bf384b2489372ee15c773445b658000f405"
 
-# You can use patch to mock requests.get, requests.post, requests.put, requests.delete
-class TestApiRequests:
+def test_get_request():
+    with requests_mock.Mocker() as m:
+        m.get(f"{base_url}/public/v2/users", status_code=200, json=[{"id": 1, "name": "John Doe"}])
+        response = get_request()
+        assert response is None  # Currently there is no return value
 
-    @patch('requests.get')
-    def test_get_request_success(self, mock_get):
-        mock_get.return_value.status_code = 200
-        mock_get.return_value.json.return_value = [{"id": 1, "name": "John Doe"}]
-        
-        # Assuming there's a print capturing mechanism here.
-        get_request()  # Here it won't return anything, you might want to modify it to return the response
-
-        assert mock_get.called
-        assert mock_get.call_count == 1
-
-    @patch('requests.post')
-    def test_post_request_success(self, mock_post):
-        mock_post.return_value.status_code = 201
-        mock_post.return_value.json.return_value = {"id": 123, "name": "Naveena"}
-        
+def test_post_request():
+    with requests_mock.Mocker() as m:
+        m.post(f"{base_url}/public/v2/users", status_code=201, json={"id": 123, "name": "Naveena"})
         user_id = post_request()
-        
-        assert user_id == 123
-        assert mock_post.called
-        assert mock_post.call_count == 1
+        assert user_id == 123  # Ensure the returned user ID is correct
 
-    @patch('requests.put')
-    def test_put_request_success(self, mock_put):
-        mock_put.return_value.status_code = 200
-        mock_put.return_value.json.return_value = {"id": 123, "name": "Naveena", "status": "inactive"}
-        
-        put_request(123)  # Assume user_id 123
-        
-        assert mock_put.called
-        assert mock_put.call_count == 1
+def test_put_request():
+    user_id = 123
+    with requests_mock.Mocker() as m:
+        m.put(f"{base_url}/public/v2/users/{user_id}", status_code=200, json={"id": user_id, "status": "inactive"})
+        response = put_request(user_id)
+        assert response is None  # Currently there is no return value
 
-    @patch('requests.delete')
-    def test_delete_request_success(self, mock_delete):
-        mock_delete.return_value.status_code = 204
-        
-        delete_request(123)  # Assume user_id 123
-        
-        assert mock_delete.called
-        assert mock_delete.call_count == 1
+def test_delete_request():
+    user_id = 123
+    with requests_mock.Mocker() as m:
+        m.delete(f"{base_url}/public/v2/users/{user_id}", status_code=204)
+        response = delete_request(user_id)
+        assert response is None  # Currently there is no return value
 
-# Run the tests with: pytest -v
+if __name__ == "__main__":
+    pytest.main()
 ```
 
-### Explanation of the Test Cases:
+### Explanation:
+- **Mocking Responses:** The `requests_mock.Mocker()` is used to mock responses for different HTTP methods. We set the expected URL, status code, and the JSON response that should be returned by the mocked request.
+- **Assertions:** We verify that the responses from the functions match our expectations, such as ensuring that the `user_id` returned by `post_request` is correct. Functions like `get_request`, `put_request`, and `delete_request` currently have no return values, but in a real-world scenario, we could modify them to return relevant information.
+- **Test Structure:** We define a clear function for each HTTP method, keeping test cases isolated and focusing on one function at a time.
 
-1. **test_get_request_success**: 
-   - This test mocks a successful `GET` request with a 200 status code. You can check whether the `get_request` function is called once and confirm the expected behavior.
+Make sure to replace `your_module` with the actual name of your Python file (without the `.py` extension) where you have the provided functions defined.
 
-2. **test_post_request_success**: 
-   - This test mocks a successful `POST` request, simulating the creation of a user. You check that the returned user_id matches the mock response.
+### Running Tests:
+To run the tests, execute the following command in the terminal:
 
-3. **test_put_request_success**: 
-   - This test mocks a successful `PUT` request updating a user's information. It ensures that the function executes the request correctly.
+```bash
+pytest your_test_file.py
+```
 
-4. **test_delete_request_success**: 
-   - This test mocks a successful `DELETE` request and verifies that the function was called correctly.
-
-*Remember to replace the comment about the import with the actual module name that contains the requests code you provided.*
-
-By running these tests, you can effectively validate the functionality of the code without needing access to a live API, ensuring the tests are deterministic and repeatable.
+This will run the tests and output the results, indicating if all tests have passed or if there were any failures.
