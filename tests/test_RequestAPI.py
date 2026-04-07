@@ -1,65 +1,74 @@
-To test the provided code using `pytest`, we will create unit tests that cover the functionality of the `get_request`, `post_request`, `put_request`, and `delete_request` functions. Since these functions perform HTTP requests, we will use the `requests-mock` library to mock those requests and responses to ensure that our tests are deterministic and do not depend on external services.
+To create unit tests for the provided Python code using `pytest`, it's important to keep in mind to focus on testing the functionality of each request method (GET, POST, PUT, and DELETE). Additionally, since the code interacts with an external API, we should use mocking to simulate the API responses, allowing us to perform tests without making actual HTTP requests.
 
-Make sure to first install `pytest` and `requests-mock` if you haven't done this yet:
+We will use the `pytest` and `unittest.mock` modules to create test cases for the functions. Each test case will verify that the functions behave correctly when provided with deterministic input and handles responses as expected.
 
-```bash
-pip install pytest requests-mock
-```
-
-Below is the `pytest` code to test the provided functions:
+Here's how you could structure your test code:
 
 ```python
 import pytest
+from unittest import mock
 import requests
-import requests_mock
-from your_module import get_request, post_request, put_request, delete_request
+from your_module import get_request, post_request, put_request, delete_request  # replace 'your_module' with the actual name of your Python file
 
-# Mocking the base URL and Auth token for tests
-base_url = "https://gorest.co.in"
-auth_token = "Bearer d5fc969f6b60ddb68552800e3cdf7bf384b2489372ee15c773445b658000f405"
+# Mock responses for the API calls
+mock_get_response = mock.Mock()
+mock_post_response = mock.Mock()
+mock_put_response = mock.Mock()
+mock_delete_response = mock.Mock()
 
-def test_get_request():
-    with requests_mock.Mocker() as m:
-        m.get(f"{base_url}/public/v2/users", status_code=200, json=[{"id": 1, "name": "John Doe"}])
-        response = get_request()
-        assert response is None  # Currently there is no return value
+# Setup the mocks for the different methods
+def setup_module(module):
+    mock_get_response.status_code = 200
+    mock_get_response.json.return_value = [{"id": 1, "name": "User"}]
 
-def test_post_request():
-    with requests_mock.Mocker() as m:
-        m.post(f"{base_url}/public/v2/users", status_code=201, json={"id": 123, "name": "Naveena"})
-        user_id = post_request()
-        assert user_id == 123  # Ensure the returned user ID is correct
+    mock_post_response.status_code = 201
+    mock_post_response.json.return_value = {"id": 2, "name": "Naveena"}
+    
+    mock_put_response.status_code = 200
+    mock_put_response.json.return_value = {"id": 2, "name": "Naveena", "status": "inactive"}
 
-def test_put_request():
-    user_id = 123
-    with requests_mock.Mocker() as m:
-        m.put(f"{base_url}/public/v2/users/{user_id}", status_code=200, json={"id": user_id, "status": "inactive"})
-        response = put_request(user_id)
-        assert response is None  # Currently there is no return value
+    mock_delete_response.status_code = 204
 
-def test_delete_request():
-    user_id = 123
-    with requests_mock.Mocker() as m:
-        m.delete(f"{base_url}/public/v2/users/{user_id}", status_code=204)
-        response = delete_request(user_id)
-        assert response is None  # Currently there is no return value
+# Test for GET request
+@mock.patch('requests.get', return_value=mock_get_response)
+def test_get_request(mock_get):
+    get_request()
+    mock_get.assert_called_once()
+    assert mock_get_response.status_code == 200
 
-if __name__ == "__main__":
-    pytest.main()
+# Test for POST request
+@mock.patch('requests.post', return_value=mock_post_response)
+def test_post_request(mock_post):
+    user_id = post_request()
+    mock_post.assert_called_once()
+    assert user_id == 2
+    assert mock_post_response.status_code == 201
+
+# Test for PUT request
+@mock.patch('requests.put', return_value=mock_put_response)
+def test_put_request(mock_put):
+    user_id = 2
+    put_request(user_id)
+    mock_put.assert_called_once_with(f"https://gorest.co.in/public/v2/users/{user_id}", json=mock.ANY, headers=mock.ANY)
+    assert mock_put_response.status_code == 200
+
+# Test for DELETE request
+@mock.patch('requests.delete', return_value=mock_delete_response)
+def test_delete_request(mock_delete):
+    user_id = 2
+    delete_request(user_id)
+    mock_delete.assert_called_once_with(f"https://gorest.co.in/public/v2/users/{user_id}", headers=mock.ANY)
+    assert mock_delete_response.status_code == 204
+
+# To run the tests, use the command: pytest <filename>.py in the terminal.
 ```
 
-### Explanation:
-- **Mocking Responses:** The `requests_mock.Mocker()` is used to mock responses for different HTTP methods. We set the expected URL, status code, and the JSON response that should be returned by the mocked request.
-- **Assertions:** We verify that the responses from the functions match our expectations, such as ensuring that the `user_id` returned by `post_request` is correct. Functions like `get_request`, `put_request`, and `delete_request` currently have no return values, but in a real-world scenario, we could modify them to return relevant information.
-- **Test Structure:** We define a clear function for each HTTP method, keeping test cases isolated and focusing on one function at a time.
+### Key Points:
+1. **Mocking:** We utilize `unittest.mock.Mock` to create mock responses that simulate the behavior of the `requests` library without actually hitting the URL.
+2. **Deterministic Test Cases:** Each test case has a clear expectation based on the mock responses.
+3. **Assertions:** We make various assertions to ensure that the status codes and return values match our expectations.
+4. **Module Setup:** The function `setup_module` initializes the mock responses, creating a clean context for your tests.
 
-Make sure to replace `your_module` with the actual name of your Python file (without the `.py` extension) where you have the provided functions defined.
+Make sure to replace `'your_module'` with the actual name of the Python file where your functions are defined. 
 
-### Running Tests:
-To run the tests, execute the following command in the terminal:
-
-```bash
-pytest your_test_file.py
-```
-
-This will run the tests and output the results, indicating if all tests have passed or if there were any failures.
+Lastly, to run your tests, you'll need to have `pytest` installed. You can run your tests using the command: `pytest <filename>.py` in your terminal.
