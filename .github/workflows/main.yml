@@ -19,7 +19,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install pytest openai github PyGithub   
+          pip install pytest openai PyGithub   
 
       - name: Run test generator agent
         env:
