@@ -7,10 +7,14 @@ import os
 
 def main():
     
-    TOKEN = os.getenv("GITHUB_TOKEN")
+    #TOKEN = os.getenv("GITHUB_TOKEN")
     #print(TOKEN)
-    g = Github("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")
+    
+    token = os.getenv("PAT")
 
+
+# Push changes to GitHub
+    g = Github(token)
     repo = g.get_repo("kramalakshmi/API")
 
     src_dir = pathlib.Path("src")
