@@ -31,6 +31,7 @@ def main():
     '''
     #write_to_github(file_path, commit_msg, file_content)
 def commit_file(path, content):
+    TOKEN = os.getenv("GITHUB_TOKEN")
     g = Github(TOKEN)
     repo = g.get_repo(REPO)
 
