@@ -20,6 +20,14 @@ jobs:
       - name: Install dependencies
         run: |
           pip install pytest openai PyGithub requests    
-
+          
+      - name: Run test generator agent
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PAT: ${{ secrets.PAT }}
+        run: |
+          
+          python agent/generate_tests.py
       - name: Run tests
         run: pytest
