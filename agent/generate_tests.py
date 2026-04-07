@@ -18,7 +18,7 @@ def main():
     g = Github(auth=auth)
     repo = g.get_repo("kramalakshmi/API")
 
-    src_dir = pathlib.Path("src")
+    
     test_dir = pathlib.Path("tests")
     test_dir.mkdir(exist_ok=True)
 
