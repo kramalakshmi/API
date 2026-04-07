@@ -24,6 +24,7 @@ def main():
 
     # Close connection
     g.close()
+    
     #commit_file(str(test_file), "Hello GitHub! This file was written using PyGithub.")
 
     '''src_dir = pathlib.Path("src")
