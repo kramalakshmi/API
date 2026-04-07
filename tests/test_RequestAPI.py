@@ -1,8 +1,3 @@
-To create unit tests for the provided Python code using `pytest`, we need to mock the external HTTP requests made using the `requests` library. This allows us to test the functionality without actually making calls to the external API, ensuring our tests are deterministic.
-
-Here is an example of how to structure your tests using `pytest` and the `unittest.mock` module:
-
-```python
 import pytest
 from unittest.mock import patch, Mock
 import requests
