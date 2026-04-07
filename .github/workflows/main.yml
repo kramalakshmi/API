@@ -29,3 +29,5 @@ jobs:
         run: |
           
           python agent/generate_tests.py
+      - name: Run tests
+        run: pytest
