@@ -57,7 +57,3 @@ def test_delete_request(mock_requests):
 if __name__ == "__main__":
     pytest.main()
 
-
-5. **Running Tests**: The `if __name__ == "__main__":` block with `pytest.main()` allows running the tests directly if the file is executed.
-
-This setup provides clear, isolated tests for each function that test the expected outcomes without relying on the external API.
