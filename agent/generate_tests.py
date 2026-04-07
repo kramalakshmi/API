@@ -22,8 +22,8 @@ def main():
     message="Initial commit",       # Commit message
     content="Hello, GitHub!")
 
-# Close connection
-g.close()
+    # Close connection
+    g.close()
     #commit_file(str(test_file), "Hello GitHub! This file was written using PyGithub.")
 
     '''src_dir = pathlib.Path("src")
