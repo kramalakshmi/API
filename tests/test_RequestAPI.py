@@ -56,17 +56,7 @@ def test_delete_request(mock_requests):
 
 if __name__ == "__main__":
     pytest.main()
-```
 
-### Breakdown of the tests:
-
-1. **Mocking**: We use `unittest.mock.patch` to mock the `requests.get`, `requests.post`, `requests.put`, and `requests.delete` methods so we don't make actual API calls.
-
-2. **Fixtures**: The `mock_requests` fixture sets up the mocked functions and is used in each test to ensure we are not repeating code.
-
-3. **Testing Response**: Each test checks if the function correctly calls the appropriate HTTP method and verifies the returned values where applicable.
-
-4. **Adjust the Import Statement**: Replace `your_module` with the actual name of the Python file or module where your original code resides.
 
 5. **Running Tests**: The `if __name__ == "__main__":` block with `pytest.main()` allows running the tests directly if the file is executed.
 
