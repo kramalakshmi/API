@@ -13,10 +13,14 @@ def main():
     token = os.getenv("PAT")
 
 
-# Push changes to GitHub
+    # Push changes to GitHub
     #g = Github(token)
-    auth=github.Auth.Token(token)
-    repo = auth.get_repo("kramalakshmi/API")
+    #auth=github.Auth.Token(token)
+    auth = Auth.Token(token)
+
+    # Initialize the Github object
+    g = Github(auth=auth)
+    repo = g.get_repo("kramalakshmi/API")
 
     src_dir = pathlib.Path("src")
     test_dir = pathlib.Path("tests")
