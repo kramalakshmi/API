@@ -1,14 +1,8 @@
-To create unit tests for the provided Python code using `pytest`, it's important to keep in mind to focus on testing the functionality of each request method (GET, POST, PUT, and DELETE). Additionally, since the code interacts with an external API, we should use mocking to simulate the API responses, allowing us to perform tests without making actual HTTP requests.
 
-We will use the `pytest` and `unittest.mock` modules to create test cases for the functions. Each test case will verify that the functions behave correctly when provided with deterministic input and handles responses as expected.
-
-Here's how you could structure your test code:
-
-```python
 import pytest
 from unittest import mock
 import requests
-from your_module import get_request, post_request, put_request, delete_request  # replace 'your_module' with the actual name of your Python file
+from RequestAPI import get_request, post_request, put_request, delete_request  # replace 'your_module' with the actual name of your Python file
 
 # Mock responses for the API calls
 mock_get_response = mock.Mock()
@@ -59,16 +53,3 @@ def test_delete_request(mock_delete):
     delete_request(user_id)
     mock_delete.assert_called_once_with(f"https://gorest.co.in/public/v2/users/{user_id}", headers=mock.ANY)
     assert mock_delete_response.status_code == 204
-
-# To run the tests, use the command: pytest <filename>.py in the terminal.
-```
-
-### Key Points:
-1. **Mocking:** We utilize `unittest.mock.Mock` to create mock responses that simulate the behavior of the `requests` library without actually hitting the URL.
-2. **Deterministic Test Cases:** Each test case has a clear expectation based on the mock responses.
-3. **Assertions:** We make various assertions to ensure that the status codes and return values match our expectations.
-4. **Module Setup:** The function `setup_module` initializes the mock responses, creating a clean context for your tests.
-
-Make sure to replace `'your_module'` with the actual name of the Python file where your functions are defined. 
-
-Lastly, to run your tests, you'll need to have `pytest` installed. You can run your tests using the command: `pytest <filename>.py` in your terminal.
