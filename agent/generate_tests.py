@@ -36,12 +36,13 @@ def main():
     test_dir.mkdir(exist_ok=True)
 
     for file in src_dir.glob("*.py"):
-        print(str(Path(file).stem))
-        
-        test_code = generate_tests_for_file(file)
-        test_file = test_dir / f"test_{Path(file).stem}.py"
-        commit_file(str(test_file), test_code)
-        
+        if not file.contains("___init__"):
+            print(str(Path(file).stem))
+            
+            test_code = generate_tests_for_file(file)
+            test_file = test_dir / f"test_{Path(file).stem}.py"
+            commit_file(str(test_file), test_code)
+            
 
 
 def commit_file(path, content):
