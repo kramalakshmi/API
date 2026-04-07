@@ -2,6 +2,29 @@ from pathlib import Path
 from github import Github
 from github import Auth
 import os
+from openai import OpenAI
+
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+def generate_tests_for_file(file_path):
+    code = Path(file_path).read_text()
+
+    prompt = f"""
+    Generate pytest unit tests for the following Python code.
+    Use clear, deterministic test cases.
+
+    Code:
+    {code}
+    """
+
+    response = client.chat.completions.create(
+        model=MODEL,
+        messages=[{"role": "user", "content": prompt}]
+    )
+
+    return response.choices[0].message.content
+
+
 
 def main():
     src_dir = Path("src")
@@ -10,18 +33,16 @@ def main():
 
     for file in src_dir.glob("*.py"):
         print(str(Path(file).stem))
-        '''
+        
         test_code = generate_tests_for_file(file)
-        test_file = test_dir / f"test_{file.stem}.py"
+        test_file = test_dir / f"test_{Path(file).stem}.py"
         commit_file(str(test_file), test_code)
-        '''
+        
 
 
 def commit_file(path, content):
-    TOKEN = os.getenv("GITHUB_TOKEN")
     g = Github(TOKEN)
-    repo = g.get_repo("kramalakshmi/API")
-    #repo = g.get_repo(REPO)
+    repo = g.get_repo(REPO)
 
     try:
         existing = repo.get_contents(path)
@@ -32,6 +53,7 @@ def commit_file(path, content):
         repo.create_file(
             path, "Add generated tests", content
         )
+
 
 
 def write_to_github(path, message, content, branch="main"):
