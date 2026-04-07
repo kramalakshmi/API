@@ -36,7 +36,7 @@ def main():
     test_dir.mkdir(exist_ok=True)
 
     for file in src_dir.glob("*.py"):
-        if not file.contains("___init__"):
+        if not "___init__" in str(file): 
             print(str(Path(file).stem))
             
             test_code = generate_tests_for_file(file)
