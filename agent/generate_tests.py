@@ -55,7 +55,7 @@ def commit_file(path, content):
         )
     except:
         repo.create_file(
-            path, "Add generated tests", content , branch= createAgents
+            path, "Add generated tests", content , branch= "createAgents"
         )
 
 
