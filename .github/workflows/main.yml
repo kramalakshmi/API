@@ -19,7 +19,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install pytest openai PyGithub requests    
+          pip install pytest openai PyGithub requests 
           
       
       - name: Run tests
