@@ -33,7 +33,8 @@ def main():
 def commit_file(path, content):
     TOKEN = os.getenv("GITHUB_TOKEN")
     g = Github(TOKEN)
-    repo = g.get_repo(REPO)
+    repo = g.get_repo("kramalakshmi/API")
+    #repo = g.get_repo(REPO)
 
     try:
         existing = repo.get_contents(path)
