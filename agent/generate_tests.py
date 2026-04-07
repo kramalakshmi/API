@@ -16,7 +16,15 @@ def main():
     test_dir.mkdir(exist_ok=True)
 
     test_file = test_dir / "test_file.py"
-    commit_file(str(test_file), "Hello GitHub! This file was written using PyGithub.")
+
+    repo.create_file(
+    path="folder/new_file.txt",      # Path and name of the file
+    message="Initial commit",       # Commit message
+    content="Hello, GitHub!")
+
+# Close connection
+g.close()
+    #commit_file(str(test_file), "Hello GitHub! This file was written using PyGithub.")
 
     '''src_dir = pathlib.Path("src")
     test_dir = pathlib.Path("tests")
