@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import patch, Mock
 import requests
-from your_module import get_request, post_request, put_request, delete_request  # Adjust the import statement
+from RequestAPI import get_request, post_request, put_request, delete_request  # Adjust the import statement
 
 @pytest.fixture
 def mock_requests():
