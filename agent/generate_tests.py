@@ -7,6 +7,7 @@ import os
 
 def main():
     TOKEN = os.getenv("GITHUB_TOKEN")
+    print(TOKEN)
     g = Github(TOKEN)
 
     repo = g.get_repo("kramalakshmi/API")
