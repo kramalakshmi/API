@@ -12,8 +12,6 @@ def main():
     #print(TOKEN)
     
     token = os.getenv("PAT")
-
-
     auth = Auth.Token(token)
 
     # Initialize the Github object
