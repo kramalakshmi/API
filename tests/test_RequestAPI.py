@@ -1,4 +1,4 @@
-from src import RequestAPI
+from src.RequestAPI import get_data, post_data, put_data
 
 class MockResponse:
     def __init__(self, data):
@@ -8,20 +8,18 @@ class MockResponse:
 
 def test_get_data(monkeypatch):
     def mock_get(url):
-        return MockResponse({"url": url})
-    monkeypatch.setattr(RequestAPI.requests, "get", mock_get)
-    assert RequestAPI.get_data("http://example.com") == {"url": "http://example.com"}
+        return MockResponse({"id": 1})
+    monkeypatch.setattr("src.RequestAPI.requests.get", mock_get)
+    assert get_data("http://example.com") == {"id": 1}
 
 def test_post_data(monkeypatch):
     def mock_post(url, json):
-        return MockResponse({"url": url, "json": json})
-    monkeypatch.setattr(RequestAPI.requests, "post", mock_post)
-    payload = {"title": "Test"}
-    assert RequestAPI.post_data("http://example.com", payload) == {"url": "http://example.com", "json": payload}
+        return MockResponse({"title": json["title"]})
+    monkeypatch.setattr("src.RequestAPI.requests.post", mock_post)
+    assert post_data("http://example.com", {"title": "Test"}) == {"title": "Test"}
 
 def test_put_data(monkeypatch):
     def mock_put(url, json):
-        return MockResponse({"url": url, "json": json})
-    monkeypatch.setattr(RequestAPI.requests, "put", mock_put)
-    payload = {"title": "Updated"}
-    assert RequestAPI.put_data("http://example.com", payload) == {"url": "http://example.com", "json": payload}
+        return MockResponse({"title": json["title"]})
+    monkeypatch.setattr("src.RequestAPI.requests.put", mock_put)
+    assert put_data("http://example.com", {"title": "Updated"}) == {"title": "Updated"}
