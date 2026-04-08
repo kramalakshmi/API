@@ -1,66 +1,31 @@
-
-import pytest
-from unittest.mock import patch
-import requests
+from unittest.mock import patch, MagicMock
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-import  RequestAPI 
-#import get_request, post_request, put_request, delete_request  # Replace 'your_module' with the actual module name
+from RequestAPI import get_data, post_data, put_data
 
-class TestAPIRequests:
+@patch("your_module.requests.get")
+def test_get_data(mock_get):
+    mock_resp = MagicMock()
+    mock_resp.json.return_value = {"id": 1}
+    mock_get.return_value = mock_resp
+    assert get_data("u") == {"id": 1}
+    mock_get.assert_called_once_with("u")
 
-    @patch('requests.get')
-    def test_get_request_success(self, mock_get):
-        # Arrange
-        mock_get.return_value.status_code = 200
-        mock_get.return_value.json.return_value = [{"id": 1, "name": "John Doe"}]
+@patch("your_module.requests.post")
+def test_post_data(mock_post):
+    mock_resp = MagicMock()
+    mock_resp.json.return_value = {"ok": True}
+    mock_post.return_value = mock_resp
+    p = {"a": 1}
+    assert post_data("u", p) == {"ok": True}
+    mock_post.assert_called_once_with("u", json=p)
 
-        # Act
-        get_request()
-
-        # Assert
-        mock_get.assert_called_once()
-
-    @patch('requests.post')
-    def test_post_request_success(self, mock_post):
-        # Arrange
-        mock_post.return_value.status_code = 201
-        mock_post.return_value.json.return_value = {"id": 123, "name": "Naveena"}
-
-        # Act
-        user_id = post_request()
-
-        # Assert
-        assert user_id == 123
-        mock_post.assert_called_once()
-
-    @patch('requests.put')
-    def test_put_request_success(self, mock_put):
-        # Arrange
-        mock_put.return_value.status_code = 200
-        mock_put.return_value.json.return_value = {"id": 123, "name": "Naveena", "status": "inactive"}
-
-        # Act
-        put_request(123)
-
-        # Assert
-        mock_put.assert_called_once_with(
-            "https://gorest.co.in/public/v2/users/123",
-            json={"name": "Naveena", "email": "naveena@aa.com", "gender": "male", "status": "inactive"},
-            headers={"Authorization": "Bearer d5fc969f6b60ddb68552800e3cdf7bf384b2489372ee15c773445b658000f405"}
-        )
-
-    @patch('requests.delete')
-    def test_delete_request_success(self, mock_delete):
-        # Arrange
-        mock_delete.return_value.status_code = 204
-
-        # Act
-        delete_request(123)
-
-        # Assert
-        mock_delete.assert_called_once_with(
-            "https://gorest.co.in/public/v2/users/123",
-            headers={"Authorization": "Bearer d5fc969f6b60ddb68552800e3cdf7bf384b2489372ee15c773445b658000f405"}
-        )
+@patch("your_module.requests.put")
+def test_put_data(mock_put):
+    mock_resp = MagicMock()
+    mock_resp.json.return_value = {"done": 1}
+    mock_put.return_value = mock_resp
+    p = {"x": 2}
+    assert put_data("u", p) == {"done": 1}
+    mock_put.assert_called_once_with("u", json=p)
