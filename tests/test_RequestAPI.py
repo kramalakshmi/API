@@ -38,17 +38,5 @@ def test_put_data(mock_put):
 
 if __name__ == "__main__":
     pytest.main()
-```
+ 
 
-### Explanation
-1. **Mocking**: We use `@patch` to mock the `requests.get`, `requests.post`, and `requests.put` functions so that our tests do not make actual HTTP requests.
-
-2. **Controlled Responses**: We define sample responses for each type of request, which are returned when the mocked methods are called.
-
-3. **Assertions**: Each test verifies that the function correctly processes the response and that the requests are called with the expected parameters.
-
-4. **Deterministic Input**: The test cases use fixed URLs and payloads, making them predictable and repeatable.
-
-5. **Running Tests**: The bottom line allows you to run the tests if this script is executed directly. 
-
-Make sure to replace `your_module` with the appropriate module name where the functions are defined.
