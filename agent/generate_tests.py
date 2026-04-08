@@ -63,7 +63,7 @@ def commit_file(path, content):
     try:
         existing = repo.get_contents(path)
         repo.update_file(
-            path, "Update generated tests", content,existing.sha, branch= "Agents"
+            path, "Update generated tests", content, existing.sha, branch= "Agents"
         )
     except:
         repo.create_file(
@@ -76,7 +76,7 @@ def write_to_github(path, message, content, branch="main"):
     try:
         # Check if the file already exists to update it
         contents = repo.get_contents(path, ref=branch)
-        repo.update_file(contents.path, message, content, contents.sha, branch=branch)
+        repo.update_file(contents.path, message, content, existing.sha, branch=branch)
         print(f"File '{path}' updated successfully.")
     except Exception:
         # If the file doesn't exist, create it
