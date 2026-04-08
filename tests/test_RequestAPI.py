@@ -1,19 +1,13 @@
-To test the provided functions using `pytest`, we can leverage the `requests-mock` library to simulate HTTP requests, allowing us to create deterministic test cases without actually hitting the live API. Below are example unit tests that you can use.
 
-First, ensure you have `pytest` and `requests-mock` installed. If you haven't installed them yet, you can do so using pip:
-
-```bash
-pip install pytest requests-mock
-```
-
-Here's the test code for the given functions:
-
-```python
 import pytest
 import requests
 import requests_mock
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from your_module import get_data, post_data, put_data  # Adjust the import statement based on your actual module name.
+import RequestAPI
+from RequestAPI import get_data, post_data, put_data  # Adjust the import statement based on your actual module name.
 
 def test_get_data():
     url = "https://jsonplaceholder.typicode.com/posts/1"
