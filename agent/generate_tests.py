@@ -16,7 +16,7 @@ auth = Auth.Token(TOKEN)
 
 def generate_tests_for_file(file_path):
     code = Path(file_path).read_text()
-
+    
     prompt = f"""
     Generate pytest unit tests for the following Python code.
     Use clear, deterministic test cases.
@@ -84,12 +84,24 @@ def write_to_github(path, message, content, branch="main"):
         print(f"File '{path}' created successfully.")
 
 def generate_tests_file(code, filename, error=None, coverage_feedback=None):
+    repo_structure = """
+        project/
+            src/
+                __init__.py
+                RequestAPI.py
+            tests/
+                test_RequestAPI.py
+        """
+
     
     prompt = f"""
     Generate minimal pytest tests for {filename}.
     No comments, no blank lines, no placeholders.
     Ensure valid Python.
-
+    Here is the repository structure:
+    {repo_structure}
+    
+    Use ONLY valid imports based on this structure.
     Source code:
     {code}
     """
@@ -159,6 +171,7 @@ def refine_until_strong(file_path, max_attempts=5):
 
         # 3. Auto‑fix import errors
         if "ImportError" in feedback or "ModuleNotFoundError" in feedback:
+            print("Import error")
             test_code = generate_tests_file(code, filename, coverage_feedback=feedback)
             attempt += 1
             continue
