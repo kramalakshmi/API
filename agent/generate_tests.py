@@ -29,7 +29,7 @@ Just clean, minimal test code.
         model=MODEL,
         messages=[
             {"role": "system", "content": "You are an expert Python developer. Write only the code, no explanations ,  comments, or docstrings. I want pytest tests without any extra lines, no chatter, no comments, no unnecessary whitespace, no print statements, no example usage.Just clean, minimal test code."},
-        {"role": "user", "content": prompt}
+        {"role": "user", "content": prompt}]
             
     )
 
