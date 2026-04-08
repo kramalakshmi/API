@@ -1,95 +1,103 @@
-To create unit tests for the provided Python code using `pytest`, we can use the `unittest.mock` module to mock the `requests` library's functions. This way, we can simulate various API responses without making actual network requests. Below are the unit tests for the code provided:
+To write unit tests for the provided Python code using `pytest`, we will need to mock the `requests` library since we don't want to make actual HTTP calls while testing. We'll use the `unittest.mock` library to achieve this. This approach lets us simulate different responses for the HTTP requests.
+
+Below are the unit tests for the provided code, using clear and deterministic test cases.
 
 ```python
 import pytest
 from unittest.mock import patch, Mock
-import requests
+from mymodule import get_request, post_request, put_request, delete_request  # Assuming your code is in mymodule.py
 
-# Assuming the original code is in a module named api_client (you can change this to the actual module name)
-from api_client import get_request, post_request, put_request, delete_request
+# Replace with the actual base_url and auth_token if you need specific tests
+base_url = "https://gorest.co.in"
+auth_token = "Bearer d5fc969f6b60ddb68552800e3cdf7bf384b2489372ee15c773445b658000f405"
 
-# Test URL and Auth Token
-BASE_URL = "https://gorest.co.in"
-AUTH_TOKEN = "Bearer d5fc969f6b60ddb68552800e3cdf7bf384b2489372ee15c773445b658000f405"
-
-def test_get_request_success():
-    with patch('requests.get') as mock_get:
-        mock_response = Mock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = [{"id": 1, "name": "John Doe"}]
-        mock_get.return_value = mock_response
-        
-        get_request()  # Call the function
-        
-        mock_get.assert_called_once_with(f"{BASE_URL}/public/v2/users", headers={"Authorization": AUTH_TOKEN})
+# Mock data for user
+mock_user_data = {
+    "id": 1,
+    "name": "Naveena",
+    "email": "naveena@aa.com",
+    "gender": "male",
+    "status": "active"
+}
 
 
-def test_post_request_success():
-    with patch('requests.post') as mock_post:
-        mock_response = Mock()
-        mock_response.status_code = 201
-        mock_response.json.return_value = {"id": 1, "name": "Naveena"}
-        mock_post.return_value = mock_response
-        
-        user_id = post_request()  # Call the function
-        
-        assert user_id == 1
-        mock_post.assert_called_once_with(
-            f"{BASE_URL}/public/v2/users",
-            json={"name": "Naveena", "email": "naveean@aa.com", "gender": "male", "status": "active"},
-            headers={"Authorization": AUTH_TOKEN}
-        )
+@patch('requests.get')
+def test_get_request(mock_get):
+    # Arrange
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = [mock_user_data]
+    mock_get.return_value = mock_response
+    
+    # Act
+    get_request()
+    
+    # Assert
+    mock_get.assert_called_once_with(f"{base_url}/public/v2/users", headers={"Authorization": auth_token})
 
 
-def test_put_request_success():
-    user_id = 1
-    with patch('requests.put') as mock_put:
-        mock_response = Mock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = {"id": user_id, "status": "inactive"}
-        mock_put.return_value = mock_response
-        
-        put_request(user_id)  # Call the function
-        
-        mock_put.assert_called_once_with(
-            f"{BASE_URL}/public/v2/users/{user_id}",
-            json={"name": "Naveena", "email": "naveena@aa.com", "gender": "male", "status": "inactive"},
-            headers={"Authorization": AUTH_TOKEN}
-        )
+@patch('requests.post')
+def test_post_request(mock_post):
+    # Arrange
+    mock_response = Mock()
+    mock_response.status_code = 201
+    mock_response.json.return_value = mock_user_data
+    mock_post.return_value = mock_response
+
+    # Act
+    user_id = post_request()
+
+    # Assert
+    mock_post.assert_called_once_with(f"{base_url}/public/v2/users", json={
+        "name": "Naveena",
+        "email": "naveean@aa.com",
+        "gender": "male",
+        "status": "active"
+    }, headers={"Authorization": auth_token})
+    assert user_id == mock_user_data["id"]
 
 
-def test_delete_request_success():
-    user_id = 1
-    with patch('requests.delete') as mock_delete:
-        mock_response = Mock()
-        mock_response.status_code = 204
-        mock_delete.return_value = mock_response
-        
-        delete_request(user_id)  # Call the function
-        
-        mock_delete.assert_called_once_with(f"{BASE_URL}/public/v2/users/{user_id}", headers={"Authorization": AUTH_TOKEN})
+@patch('requests.put')
+def test_put_request(mock_put):
+    # Arrange
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = mock_user_data
+    mock_put.return_value = mock_response
+
+    # Act
+    put_request(mock_user_data["id"])
+
+    # Assert
+    mock_put.assert_called_once_with(f"{base_url}/public/v2/users/{mock_user_data['id']}", json={
+        "name": "Naveena",
+        "email": "naveena@aa.com",
+        "gender": "male",
+        "status": "inactive"
+    }, headers={"Authorization": auth_token})
 
 
-if __name__ == "__main__":
-    pytest.main()
+@patch('requests.delete')
+def test_delete_request(mock_delete):
+    # Arrange
+    mock_response = Mock()
+    mock_response.status_code = 204
+    mock_delete.return_value = mock_response
+
+    # Act
+    delete_request(mock_user_data["id"])
+
+    # Assert
+    mock_delete.assert_called_once_with(f"{base_url}/public/v2/users/{mock_user_data['id']}", headers={"Authorization": auth_token})
+
+
+# To run the tests, you would typically run: pytest <filename>.py in terminal
 ```
 
-### Explanation of the Test Code:
-1. **Imports**: We import `pytest` for testing, `patch` and `Mock` for mocking the requests, and the functions we want to test from the module where they are defined.
-  
-2. **Test Functions**:
-   - Each test function simulates a successful call to the corresponding API method (GET, POST, PUT, DELETE).
-   - We use `patch` to mock `requests.get`, `requests.post`, `requests.put`, and `requests.delete` calls within their respective test functions.
-   - `Mock` objects are constructed to specify the desired behavior of the mocked functions, particularly their `status_code` and `json()` return value.
+### Key Points:
+- We use `@patch` to mock the HTTP requests made by the `requests` library methods (`get`, `post`, `put`, `delete`).
+- Each test checks that the respective method was called with the expected URL and parameters.
+- In `test_post_request`, we assert that the returned `user_id` matches the mock data defined.
+- Similarly, you can run these tests using the command line by executing `pytest <filename>.py`, where `<filename>.py` is the name of your Python file containing these tests.
 
-3. **Assertions**: We make assertions to ensure:
-   - The correct user IDs are returned from the `post_request`.
-   - The mocked functions are called with the expected arguments.
-
-### Usage:
-To run these tests, save them in a file (e.g., `test_api_client.py`), and run the following command in your terminal:
-```bash
-pytest test_api_client.py
-``` 
-
-This will execute the tests and let you know whether they pass or fail. Make sure you also have `pytest` and `requests` installed in your environment.
+Make sure to adjust the import statements and structure of the tests according to your actual module names.
