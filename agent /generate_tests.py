@@ -28,7 +28,7 @@ Just clean, minimal test code.
     response = client.chat.completions.create(
         model=MODEL,
         messages=[
-            {"role": "system", "content": "You are an expert Python developer. Write only the code, no explanations ,  comments, or docstrings.
+            {"role": "system", "content": "You are an expert Python developer. Write only the code, do not include explanations ,do not include   comments, do not include docstrings.
             I want pytest tests without any extra lines, no chatter, no comments, no keypoints, no unnecessary whitespace, no print statements, no example usage.
 Just clean, minimal test code.
 "},
