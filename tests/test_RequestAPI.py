@@ -5,7 +5,8 @@ import requests
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from RequestAPI import get_request, post_request, put_request, delete_request  # Replace 'your_module' with the actual module name
+import  RequestAPI 
+#import get_request, post_request, put_request, delete_request  # Replace 'your_module' with the actual module name
 
 class TestAPIRequests:
 
