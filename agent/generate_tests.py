@@ -131,7 +131,7 @@ def run_pytest_and_collect_feedback(test_code, source_file):
 
 def refine_until_strong(file_path, max_attempts=5):
     code = Path(file_path).read_text()
-    filename = str(Path(file_path).stem)
+    filename = str(Path(file_path))
     test_code = generate_tests_file(code, filename)
     attempt = 0
 
