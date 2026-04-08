@@ -6,6 +6,8 @@ from openai import OpenAI
 import ast
 import subprocess
 import tempfile
+import re
+
 
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
