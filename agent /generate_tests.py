@@ -16,7 +16,7 @@ def generate_tests_for_file(file_path):
     prompt = f"""
     Generate pytest unit tests for the following Python code.
     Use clear, deterministic test cases.
-    Return only the Python code. Do not include explanations, comments, or docstrings
+    Return only the Python code. Do not include explanations,Do not include comments and Do not include docstrings
     I want pytest tests without any extra lines, no chatter, no comments, no unnecessary whitespace, no print statements, no example usage.
 Just clean, minimal test code.
 
