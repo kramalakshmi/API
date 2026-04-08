@@ -63,7 +63,7 @@ def commit_file(path, content):
     try:
         existing = repo.get_contents(path)
         repo.update_file(
-            path, "Update generated tests", content, branch= "Agents"
+            path, "Update generated tests", content,existing.sha, branch= "Agents"
         )
     except:
         repo.create_file(
