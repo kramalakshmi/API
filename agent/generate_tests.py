@@ -138,7 +138,7 @@ def run_pytest_and_collect_feedback(test_code, source_file):
             f.write(code)
 
         result = subprocess.run(
-            ["pytest", "--maxfail=1", "--disable-warnings", "-q", "--cov", tmp],
+            ["pytest", "--maxfail=1", "--disable-warnings", "-q", "--cov=",src_path, test_path],
             capture_output=True,
             text=True
         )
