@@ -17,7 +17,10 @@ def generate_tests_for_file(file_path):
     Generate pytest unit tests for the following Python code.
     Use clear, deterministic test cases.
     Return only the Python code. Do not include explanations, comments, or docstrings
-    
+    I want pytest tests without any extra lines, no chatter, no comments, no unnecessary whitespace, no print statements, no example usage.
+Just clean, minimal test code.
+
+
     Code:
     {code}
     """
@@ -25,7 +28,10 @@ def generate_tests_for_file(file_path):
     response = client.chat.completions.create(
         model=MODEL,
         messages=[
-            {"role": "system", "content": "You are an expert Python developer. Write only the code, no explanations ,  comments, or docstrings."},
+            {"role": "system", "content": "You are an expert Python developer. Write only the code, no explanations ,  comments, or docstrings.
+            I want pytest tests without any extra lines, no chatter, no comments, no unnecessary whitespace, no print statements, no example usage.
+Just clean, minimal test code.
+"},
         {"role": "user", "content": prompt}
             
     )
