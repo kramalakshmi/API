@@ -3,6 +3,7 @@ from github import Github
 from github import Auth
 import os
 from openai import OpenAI
+import ast
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 MODEL = "gpt-5.4"
