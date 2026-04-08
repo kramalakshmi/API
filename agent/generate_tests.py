@@ -142,7 +142,7 @@ def run_pytest_and_collect_feedback(test_code, source_file):
             capture_output=True,
             text=True
         )
-        print( "Coverage generated ")
+        print( "Coverage generated "+str(result.stdout) + "\n" + str(result.stderr))
 
         return result.stdout + "\n" + result.stderr
 
