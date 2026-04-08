@@ -1,88 +1,96 @@
-To create unit tests for the provided Python code using `pytest`, we need to mock the `requests` library since the functions perform actual HTTP requests. We can use the `pytest` library alongside `unittest.mock` to create these tests.
+To test the provided Python code using `pytest`, we will want to use the `requests` library's capabilities to mock HTTP requests and responses. We'll create unit tests for each of the HTTP methods (GET, POST, PUT, DELETE) to ensure they behave as expected.
 
-Below are the unit tests for the code:
+Here are the unit tests:
 
 ```python
 import pytest
-from unittest.mock import patch, Mock
-from your_module import get_request, post_request, put_request, delete_request  # replace 'your_module' with the actual module name
+import requests
+from unittest import mock
 
-class TestAPIRequests:
-    
-    @patch('your_module.requests.get')
-    def test_get_request_success(self, mock_get):
-        # Arrange
-        mock_response = Mock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = [{"id": 1, "name": "John Doe", "email": "john@example.com"}]
-        mock_get.return_value = mock_response
-        
-        # Act
-        get_request()
-        
-        # Assert
-        mock_get.assert_called_once()
-    
-    @patch('your_module.requests.post')
-    def test_post_request_success(self, mock_post):
-        # Arrange
-        mock_response = Mock()
-        mock_response.status_code = 201
-        mock_response.json.return_value = {"id": 123, "name": "Naveena"}
-        mock_post.return_value = mock_response
-        
-        # Act
-        user_id = post_request()
-        
-        # Assert
-        mock_post.assert_called_once()
-        assert user_id == 123
-    
-    @patch('your_module.requests.put')
-    def test_put_request_success(self, mock_put):
-        # Arrange
-        user_id = 123
-        mock_response = Mock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = {"id": user_id, "status": "inactive"}
-        mock_put.return_value = mock_response
-        
-        # Act
-        put_request(user_id)
-        
-        # Assert
-        mock_put.assert_called_once_with(f"https://gorest.co.in/public/v2/users/{user_id}", json={
-            "name": "Naveena",
-            "email": "naveena@aa.com",
-            "gender": "male",
-            "status": "inactive"
-        }, headers={"Authorization": "Bearer d5fc969f6b60ddb68552800e3cdf7bf384b2489372ee15c773445b658000f405"})
+# Assuming the above code is in a module named `api_module`
+from api_module import get_request, post_request, put_request, delete_request
 
-    @patch('your_module.requests.delete')
-    def test_delete_request_success(self, mock_delete):
-        # Arrange
-        user_id = 123
-        mock_response = Mock()
-        mock_response.status_code = 204
-        mock_delete.return_value = mock_response
-        
-        # Act
-        delete_request(user_id)
-        
-        # Assert
-        mock_delete.assert_called_once_with(f"https://gorest.co.in/public/v2/users/{user_id}", headers={"Authorization": "Bearer d5fc969f6b60ddb68552800e3cdf7bf384b2489372ee15c773445b658000f405"})
+@pytest.fixture
+def mock_requests():
+    with mock.patch('api_module.requests') as mock_requests:
+        yield mock_requests
+
+def test_get_request(mock_requests):
+    """ Tests the get_request function. """
+    # Mocking the response
+    mock_response = mock.Mock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = [{"id": 1, "name": "John"}]  # Sample user data
+    mock_requests.get.return_value = mock_response
+    
+    get_request()
+    
+    # Assert that the requests.get was called with the expected URL and headers
+    mock_requests.get.assert_called_once_with("https://gorest.co.in/public/v2/users", 
+                                               headers={"Authorization": "Bearer d5fc969f6b60ddb68552800e3cdf7bf384b2489372ee15c773445b658000f405"})
+
+def test_post_request(mock_requests):
+    """ Tests the post_request function. """
+    # Mocking the response
+    mock_response = mock.Mock()
+    mock_response.status_code = 201
+    mock_response.json.return_value = {"id": 2, "name": "Naveena"}  # Simulated return data
+    mock_requests.post.return_value = mock_response
+    
+    user_id = post_request()
+    
+    # Assert that user_id is correctly returned
+    assert user_id == 2
+    # Assert that the requests.post was called with the expected URL, data and headers
+    mock_requests.post.assert_called_once_with("https://gorest.co.in/public/v2/users", 
+                                                json={"name": "Naveena", "email": "naveean@aa.com", "gender": "male", "status": "active"}, 
+                                                headers={"Authorization": "Bearer d5fc969f6b60ddb68552800e3cdf7bf384b2489372ee15c773445b658000f405"})
+
+def test_put_request(mock_requests):
+    """ Tests the put_request function. """
+    user_id = 3  # Example user ID
+    # Mocking the response
+    mock_response = mock.Mock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {"id": user_id, "name": "Naveena", "status": "inactive"}  # Sample response
+    mock_requests.put.return_value = mock_response
+    
+    put_request(user_id)
+    
+    # Assert that the requests.put was called with the expected URL, data, and headers
+    mock_requests.put.assert_called_once_with("https://gorest.co.in/public/v2/users/3", 
+                                               json={"name": "Naveena", "email": "naveena@aa.com", "gender": "male", "status": "inactive"}, 
+                                               headers={"Authorization": "Bearer d5fc969f6b60ddb68552800e3cdf7bf384b2489372ee15c773445b658000f405"})
+
+def test_delete_request(mock_requests):
+    """ Tests the delete_request function. """
+    user_id = 4  # Example user ID
+    # Mocking the response
+    mock_response = mock.Mock()
+    mock_response.status_code = 204
+    mock_requests.delete.return_value = mock_response
+    
+    delete_request(user_id)
+    
+    # Assert that the requests.delete was called with the expected URL and headers
+    mock_requests.delete.assert_called_once_with("https://gorest.co.in/public/v2/users/4", 
+                                                  headers={"Authorization": "Bearer d5fc969f6b60ddb68552800e3cdf7bf384b2489372ee15c773445b658000f405"})
+
+if __name__ == "__main__":
+    pytest.main()
 ```
 
-### Explanation of the Test Code:
-1. **Mocking the Requests Library**: We use `unittest.mock.patch` to replace the `requests.get`, `requests.post`, `requests.put`, and `requests.delete` methods with mock objects. This avoids making actual network requests during the tests.
+### Explanation:
+1. **Mocking Requests**: We leverage `unittest.mock.patch` to mock the `requests` module used in your API functions. This prevents actual API calls during the tests, enabling us to create deterministic responses.
 
-2. **Setup for Each Test**: Each test method sets up a mock response for the corresponding HTTP method, defining the `status_code` and returning a specific JSON response.
+2. **Test Functions**: Each test function corresponds to an API method:
+   - `test_get_request`: Tests the `get_request` function with a mock response.
+   - `test_post_request`: Tests the `post_request` function, checks if it returns the correct user ID.
+   - `test_put_request`: Tests the `put_request` function with a user ID.
+   - `test_delete_request`: Tests the `delete_request` function with a user ID.
 
-3. **Acting on the Functions**: Each test calls the corresponding function — `get_request`, `post_request`, etc.
+3. **Assertions**: We assert that the mocked requests were called with the expected URLs, data, and headers. This verifies that our functions work correctly with the requests module.
 
-4. **Assertions**: Each test asserts that the mocked HTTP method was called with the expected parameters. The tests for `post_request` and `put_request` also check that the return value is as expected.
+4. **Using Fixtures**: The `mock_requests` fixture is used to provide a mock version of the `requests` module to each test. 
 
-5. **Deterministic Behavior**: The tests use fixed responses and IDs for predictable behavior, ensuring that the results won't change with environment states or external API responses.
-
-### Note:
-Remember to replace `your_module` in the import statement with the actual name of the module where your original functions are defined. Additionally, ensure that you have `pytest` and `pytest-mock` installed in your environment to run these tests.
+This structure keeps the tests clear, deterministic, and focused on functionality rather than network behavior. To run these tests, you should install `pytest` and run the current script where these tests are defined.
