@@ -80,7 +80,7 @@ def write_to_github(path, message, content, branch="main"):
         print(f"File '{path}' created successfully.")
 
 def generate_tests_file(code, filename, error=None, coverage_feedback=None):
-    code = Path(file_path).read_text()
+    
     prompt = f"""
     Generate minimal pytest tests for {filename}.
     No comments, no blank lines, no placeholders.
