@@ -119,7 +119,7 @@ def run_pytest_and_collect_feedback(test_code, source_file):
             f.write(test_code)
 
         with open(src_path, "w") as f:
-            code = Path(file_path).read_text()
+            code = Path(source_file).read_text()
             f.write(code)
 
         result = subprocess.run(
