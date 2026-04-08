@@ -137,8 +137,8 @@ def run_pytest_and_collect_feedback(test_code, source_file):
             code = Path(source_file).read_text()
             f.write(code)
 
-        result = subprocess.run(
-            ["pytest", "--maxfail=1", "--disable-warnings", "-q", "--cov=",src_path, test_path],
+         result = subprocess.run(
+            ["pytest", "--maxfail=1", "--disable-warnings", "-q", "--cov", tmp],
             capture_output=True,
             text=True
         )
@@ -194,6 +194,12 @@ def refine_until_strong(file_path, max_attempts=5):
         print("No import error found.. MOving on")
         # 4. Coverage‑guided refinement
         if "coverage" in feedback.lower() or "missing" in feedback.lower():
+            match = re.search(r"TOTAL\s+\d+\s+\d+\s+(\d+)%", feedback)
+            if match:
+                print("COverage percentage "+str( int(match.group(1))))
+    
+            
+
             print("COverage missing feedback "+ str(feedback))
             test_code = generate_tests_file(code, filename, coverage_feedback=feedback)
             attempt += 1
