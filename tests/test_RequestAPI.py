@@ -1,6 +1,11 @@
 import pytest
 from unittest.mock import patch
-from your_module import get_data, post_data, put_data  # Adjust the import according to your module name
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+#import RequestAPI
+from RequestAPI import get_data, post_data, put_data  # Adjust the import according to your module name
 
 # Sample responses to mock for the tests
 mock_get_response = {"userId": 1, "id": 1, "title": "Test title", "body": "Test body"}
