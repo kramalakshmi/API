@@ -24,7 +24,10 @@ def generate_tests_for_file(file_path):
 
     response = client.chat.completions.create(
         model=MODEL,
-        messages=[{"role": "user", "content": prompt}]
+        messages=[
+            {"role": "system", "content": "You are an expert Python developer. Write only the code, no explanations or comments."},
+        {"role": "user", "content": prompt}
+            
     )
 
     return response.choices[0].message.content
