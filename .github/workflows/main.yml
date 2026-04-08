@@ -20,8 +20,10 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install pytest openai PyGithub requests 
+          pip install --upgrade pip setuptools wheel
+          pip install pytest openai PyGithub requests requests-mock typed_ast pytest-cov
 
+     
       - name: Run test generator agent
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
