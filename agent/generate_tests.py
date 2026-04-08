@@ -197,6 +197,7 @@ def refine_until_strong(file_path, max_attempts=5):
             print("COverage missing feedback "+ str(feedback))
             test_code = generate_tests_file(code, filename, coverage_feedback=feedback)
             attempt += 1
+            print("Attempt "+str(attempt))
             continue
         print("No coverage missing .. MOving on")
         # 5. Runtime errors
