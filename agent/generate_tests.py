@@ -62,7 +62,7 @@ def commit_file(path, content):
 
     try:
         existing = repo.get_contents(path)
-        print("Code "+str(existing))
+        print("Existing Code "+str(existing))
         repo.update_file(
             path, "Update generated tests", content, existing.sha, branch= "AgenticAI"
         )
@@ -142,7 +142,7 @@ def run_pytest_and_collect_feedback(test_code, source_file):
             capture_output=True,
             text=True
         )
-        print( str(result.stdout) + "\n" + str(result.stderr))
+        print( "Coverage generated "+str(result.stdout) + "\n" + str(result.stderr))
 
         return result.stdout + "\n" + result.stderr
 
@@ -167,9 +167,7 @@ def refine_until_strong(file_path, max_attempts=5):
         # 2. Run pytest + coverage
         feedback = run_pytest_and_collect_feedback(test_code, filename)
 
-        # Stop if everything passed
-        if "failed" not in feedback and "ERROR" not in feedback:
-            return test_code
+        
 
         # 3. Auto‑fix import errors
         if "ImportError" in feedback or "ModuleNotFoundError" in feedback:
@@ -205,6 +203,9 @@ def refine_until_strong(file_path, max_attempts=5):
             test_code = generate_tests_file(code, filename, coverage_feedback=feedback)
             attempt += 1
             continue
+        # Stop if everything passed
+        if "failed" not in feedback and "ERROR" not in feedback:
+            return test_code
 
     raise RuntimeError("Failed to generate strong tests after refinement attempts")
 if __name__ == "__main__":
