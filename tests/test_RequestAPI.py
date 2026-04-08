@@ -1,4 +1,8 @@
-import src.RequestAPI as RequestAPI
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+import RequestAPI
 
 class DummyResponse:
     def __init__(self, data):
