@@ -46,7 +46,7 @@ def main():
         if not "___init__" in str(file): 
             print(str(Path(file).stem))
             
-            test_code = generate_tests_file(file)
+            test_code = refine_until_strong(file)
             test_file = test_dir / f"test_{Path(file).stem}.py"
             commit_file(str(test_file), test_code)
             
@@ -80,6 +80,7 @@ def write_to_github(path, message, content, branch="main"):
         print(f"File '{path}' created successfully.")
 
 def generate_tests_file(code, filename, error=None, coverage_feedback=None):
+    code = Path(file_path).read_text()
     prompt = f"""
     Generate minimal pytest tests for {filename}.
     No comments, no blank lines, no placeholders.
@@ -124,7 +125,9 @@ def run_pytest_and_collect_feedback(test_code, source_file):
         return result.stdout + "\n" + result.stderr
 
 
-def refine_until_strong(code, filename, max_attempts=5):
+def refine_until_strong(file_path, max_attempts=5):
+    code = Path(file_path).read_text()
+    filename = str(Path(file).stem)
     test_code = generate_tests_file(code, filename)
     attempt = 0
 
