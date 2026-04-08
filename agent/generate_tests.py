@@ -172,7 +172,13 @@ def refine_until_strong(file_path, max_attempts=5):
         # 3. Auto‑fix import errors
         if "ImportError" in feedback or "ModuleNotFoundError" in feedback:
             print("Import error")
-            test_code = generate_tests_file(code, filename, coverage_feedback=feedback)
+            test_code = generate_tests_file(code, filename, coverage_feedback=f"""
+        Fix the import errors shown below.
+        Use ONLY imports that exist in the repo structure.
+        Do NOT invent modules.
+        {feedback}
+        """
+)
             attempt += 1
             continue
 
