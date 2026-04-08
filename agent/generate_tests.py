@@ -173,12 +173,20 @@ def refine_until_strong(file_path, max_attempts=5):
         if "ImportError" in feedback or "ModuleNotFoundError" in feedback:
             print("Import error")
             test_code = generate_tests_file(code, filename, coverage_feedback=f"""
+        
         Fix the import errors shown below.
-        Instead of the error import statement use these lines
+
+        Replace the import with EXACTLY this block:
+
         import sys
-import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-{feedback}
+        import os
+        sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+        import RequestAPI
+
+        Do NOT use 'import src.RequestAPI'.
+        Do NOT invent modules.
+        {feedback}
+        
         """
 )
             attempt += 1
