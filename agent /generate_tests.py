@@ -16,7 +16,7 @@ def generate_tests_for_file(file_path):
     prompt = f"""
     Generate pytest unit tests for the following Python code.
     Use clear, deterministic test cases.
-    Return only clean code.
+    Return only the Python code. Do not include explanations, comments, or docstrings
     
     Code:
     {code}
