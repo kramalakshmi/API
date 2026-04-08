@@ -174,9 +174,11 @@ def refine_until_strong(file_path, max_attempts=5):
             print("Import error")
             test_code = generate_tests_file(code, filename, coverage_feedback=f"""
         Fix the import errors shown below.
-        Use ONLY imports that exist in the repo structure.
-        Do NOT invent modules.
-        {feedback}
+        Instead of the error import statement use these lines
+        import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+{feedback}
         """
 )
             attempt += 1
