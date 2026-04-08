@@ -4,6 +4,9 @@ from github import Auth
 import os
 from openai import OpenAI
 import ast
+import subprocess
+import tempfile
+
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 MODEL = "gpt-5.4"
