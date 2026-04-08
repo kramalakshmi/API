@@ -111,6 +111,7 @@ def generate_tests_file(code, filename, error=None, coverage_feedback=None):
 
 def run_pytest_and_collect_feedback(test_code, source_file):
     filename = str(Path(source_file).stem)
+    print("Running pytest and collecting feedback")
     with tempfile.TemporaryDirectory() as tmp:
         test_path = f"{tmp}/test_generated.py"
         src_path = f"{tmp}/{filename}"
@@ -127,6 +128,7 @@ def run_pytest_and_collect_feedback(test_code, source_file):
             capture_output=True,
             text=True
         )
+        print( str(result.stdout) + "\n" + str(result.stderr))
 
         return result.stdout + "\n" + result.stderr
 
@@ -137,11 +139,12 @@ def refine_until_strong(file_path, max_attempts=5):
     filename = str(Path(file_path))
     test_code = generate_tests_file(code, filename)
     attempt = 0
-
+    print("Attempt "+str(attempt))
     while attempt < max_attempts:
         # 1. Syntax check
         try:
             ast.parse(test_code)
+            print("Parsed code")
         except SyntaxError as e:
             test_code = generate_tests_file(code, filename, error=str(e))
             attempt += 1
