@@ -1,1 +1,0 @@
-It seems that you forgot to include the Python code you want to generate unit tests for. Please provide the code you'd like to test, and I will help you create `pytest` unit tests for it.
