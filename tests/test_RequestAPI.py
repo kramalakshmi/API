@@ -1,8 +1,3 @@
-To create unit tests for the provided Python code that uses the `requests` library, it's important to isolate the code from external dependencies. For this purpose, we can use the `pytest` framework along with the `unittest.mock` module to mock the `requests.get`, `requests.post`, and `requests.put` methods.
-
-Below are the unit tests that will test the `get_data`, `post_data`, and `put_data` functions. Each test case uses clear and deterministic input to ensure that it only tests the functionality of the code itself and not the external APIs.
-
-```python
 import pytest
 from unittest.mock import patch
 from your_module import get_data, post_data, put_data  # Adjust the import according to your module name
