@@ -1,18 +1,11 @@
-To create unit tests using `pytest` for the given Python code, we will mock the `requests` library to avoid actual API calls. The tests will focus on checking the functionality of the `get_request`, `post_request`, `put_request`, and `delete_request` functions.
 
-Before we proceed with the tests, ensure that the `pytest` library and `pytest-mock` are installed in your environment. You can install them via pip:
-
-```bash
-pip install pytest pytest-mock
-```
-
-Here are the unit tests:
-
-```python
 import pytest
 from unittest.mock import patch
 import requests
-from your_module import get_request, post_request, put_request, delete_request  # Replace 'your_module' with the actual module name
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from RequestAPI import get_request, post_request, put_request, delete_request  # Replace 'your_module' with the actual module name
 
 class TestAPIRequests:
 
@@ -70,48 +63,3 @@ class TestAPIRequests:
             "https://gorest.co.in/public/v2/users/123",
             headers={"Authorization": "Bearer d5fc969f6b60ddb68552800e3cdf7bf384b2489372ee15c773445b658000f405"}
         )
-```
-
-### Explanation:
-
-1. **Environment Setup**: Make sure you've installed `pytest` and `pytest-mock`, and replace `your_module` with the actual name of your module containing the functions.
-
-2. **Mocking**: Each test uses `@patch` from the `unittest.mock` library to replace `requests.get`, `requests.post`, `requests.put`, and `requests.delete` with mock objects. This prevents any real HTTP requests from being sent.
-
-3. **Testing**:
-   - The `test_get_request_success` checks if the GET request is made successfully.
-   - The `test_post_request_success` checks if the POST request returns the correct user ID.
-   - The `test_put_request_success` verifies that the PUT request is formed correctly and that the API is called with the expected URL and payload.
-   - The `test_delete_request_success` confirms that the DELETE request is called with the correct URL.
-
-### Execute the Tests:
-You can execute the tests using the following command in your command line:
-
-```bash
-pytest test_your_module.py  # Replace with your actual test file name
-```
-
-### Explanation:
-
-1. **Imports**: We're importing the necessary modules, including `pytest` for testing, `unittest.mock` for mocking HTTP requests, and the functions from the intended module (assumed to be `my_module`).
-
-2. **Mocking Requests**: Using `@patch` decorators, we mock the `requests.get`, `requests.post`, `requests.put`, and `requests.delete` functions so we can assert that they were called correctly without making actual HTTP requests.
-
-3. **Assertions**: Each test checks that the appropriate function was called (like `requests.get` or `requests.post`) and verifies that the returned user ID, if applicable, matches expected values.
-
-### Explanation of the Test Code:
-1. **Imports**: We import `pytest` for testing, `patch` and `Mock` for mocking the requests, and the functions we want to test from the module where they are defined.
-  
-2. **Test Functions**:
-   - Each test function simulates a successful call to the corresponding API method (GET, POST, PUT, DELETE).
-   - We use `patch` to mock `requests.get`, `requests.post`, `requests.put`, and `requests.delete` calls within their respective test functions.
-   - `Mock` objects are constructed to specify the desired behavior of the mocked functions, particularly their `status_code` and `json()` return value.
-
-3. **Assertions**: We make assertions to ensure:
-   - The correct user IDs are returned from the `post_request`.
-   - The mocked functions are called with the expected arguments.
-
-### Usage:
-To run these tests, save them in a file (e.g., `test_api_client.py`), and run the following command in your terminal:
-```bash
-pytest test_api_client.py
