@@ -5,7 +5,7 @@ import os
 from openai import OpenAI
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-MODEL = "gpt-4o-mini"
+MODEL = "gpt-5.4"
 TOKEN = os.getenv("PAT")
 auth = Auth.Token(TOKEN)
 
