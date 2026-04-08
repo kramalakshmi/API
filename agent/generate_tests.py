@@ -198,7 +198,7 @@ def refine_until_strong(file_path, max_attempts=5):
             test_code = generate_tests_file(code, filename, coverage_feedback=feedback)
             attempt += 1
             continue
-
+        print("No coverage missing .. MOving on")
         # 5. Runtime errors
         if "E   " in feedback:
             print("Runtime errors found")
