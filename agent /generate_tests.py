@@ -70,7 +70,6 @@ def commit_file(path, content):
         )
 
 
-
 def write_to_github(path, message, content, branch="main"):
     try:
         # Check if the file already exists to update it
