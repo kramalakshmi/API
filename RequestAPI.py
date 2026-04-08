@@ -1,80 +1,16 @@
 import requests
-import json
 
-base_url ="https://gorest.co.in"
-#Auth token
-auth_token = "Bearer d5fc969f6b60ddb68552800e3cdf7bf384b2489372ee15c773445b658000f405"
+def get_data(url):
+    return requests.get(url).json()
 
-#GET Request
-def get_request():
-    url = base_url + "/public/v2/users"
-    print("get url: " + url)
-    headers = {"Authorization": auth_token}
-    response = requests.get(url, headers=headers)
-    if response.status_code == 200:
-        json_data = response.json()
-        json_str = json.dumps(json_data, indent=4)
-        print("json GET response body: ", json_str)
-        print("GET USER IS DONE")
-    
+def post_data(url, payload):
+    return requests.post(url, json=payload).json()
 
-#POST Request
-def post_request():
-    url = base_url + "/public/v2/users"
-    print("post url: " + url)
-    headers = {"Authorization": auth_token}
-    data = {
-        "name": "Naveena",
-        "email": "naveean@aa.com",
-        "gender": "male",
-        "status": "active"
-    }
-    response = requests.post(url, json=data, headers=headers)
-    json_data = response.json()
-    json_str = json.dumps(json_data, indent=4)
-    print("json POST response body: ", json_str)
-    user_id = json_data["id"]
-    print("user id : ", user_id)
-    if response.status_code == 201:
-    
-        print("POST/Create USER IS DONE")
-   
-    return user_id
+def put_data(url, payload):
+    return requests.put(url, json=payload).json()
 
 
-#PUT Request
-def put_request(user_id):
-    url = base_url + f"/public/v2/users/{user_id}"
-    print("PUT url: " + url)
-    headers = {"Authorization": auth_token}
-    data = {
-        "name": "Naveena",
-        "email": "naveena@aa.com",
-        "gender": "male",
-        "status": "inactive"
-    }
-    response = requests.put(url, json=data, headers=headers)
-    if response.status_code == 200:
-        json_data = response.json()
-        json_str = json.dumps(json_data, indent=4)
-        print("json PUT response body: ", json_str)
-        print("PUT/Update USER IS DONE")
-    
-
-
-#DELETE Request
-def delete_request(user_id):
-    url = base_url + f"/public/v2/users/{user_id}"
-    print("DELETE url: " + url)
-    headers = {"Authorization": auth_token}
-    response = requests.delete(url, headers=headers)
-    if response.status_code == 204:
-        print("DELETE USER IS DONE")
-   
-
-
-#call
-get_request()
-user_id = post_request()
-put_request(user_id)
-delete_request(user_id)
+# Example usage
+print(get_data("https://jsonplaceholder.typicode.com/posts/1"))
+print(post_data("https://jsonplaceholder.typicode.com/posts", {"title": "Test"}))
+print(put_data("https://jsonplaceholder.typicode.com/posts/1", {"title": "Updated"}))
