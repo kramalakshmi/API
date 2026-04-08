@@ -62,6 +62,7 @@ def commit_file(path, content):
 
     try:
         existing = repo.get_contents(path)
+        print("Code "+str(existing))
         repo.update_file(
             path, "Update generated tests", content, existing.sha, branch= "AgenticAI"
         )
