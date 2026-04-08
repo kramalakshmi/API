@@ -21,6 +21,16 @@ jobs:
       - name: Install dependencies
         run: |
           pip install pytest openai PyGithub requests 
+      - name: Check threshold
+        run: |
+          # Example for checking a generated JSON summary
+          COVERAGE=$(jq '.total.lines.pct' coverage/coverage-summary.json)
+          if (( $(echo "$COVERAGE < 80" | bc -l) )); then
+            echo "Coverage $COVERAGE% is below 80%!"
+            exit 1
+          else
+            echo "COverage  $COVERAGE% is above 80%!"
+          fi
 
       - name: Run test generator agent
         env:
