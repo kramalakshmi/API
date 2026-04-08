@@ -124,6 +124,7 @@ def generate_tests_file(code, filename, error=None, coverage_feedback=None):
 def run_pytest_and_collect_feedback(test_code, source_file):
     filename = str(Path(source_file).stem)
     print("Running pytest and collecting feedback")
+    print ("Code generated" +test_code)
     with tempfile.TemporaryDirectory() as tmp:
         test_path = f"{tmp}/test_generated.py"
         src_path = f"{tmp}/{filename}"
