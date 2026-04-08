@@ -110,15 +110,17 @@ def generate_tests_file(code, filename, error=None, coverage_feedback=None):
 
 
 def run_pytest_and_collect_feedback(test_code, source_file):
+    filename = str(Path(file_path.stem))
     with tempfile.TemporaryDirectory() as tmp:
         test_path = f"{tmp}/test_generated.py"
-        src_path = f"{tmp}/{source_file}"
+        src_path = f"{tmp}/{filename}"
 
         with open(test_path, "w") as f:
             f.write(test_code)
 
         with open(src_path, "w") as f:
-            f.write(open(source_file).read())
+            code = Path(file_path).read_text()
+            f.write(code)
 
         result = subprocess.run(
             ["pytest", "--maxfail=1", "--disable-warnings", "-q", "--cov", tmp],
@@ -130,6 +132,7 @@ def run_pytest_and_collect_feedback(test_code, source_file):
 
 
 def refine_until_strong(file_path, max_attempts=5):
+    
     code = Path(file_path).read_text()
     filename = str(Path(file_path))
     test_code = generate_tests_file(code, filename)
