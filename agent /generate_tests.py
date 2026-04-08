@@ -16,15 +16,18 @@ def generate_tests_for_file(file_path):
     prompt = f"""
     Generate pytest unit tests for the following Python code.
     Use clear, deterministic test cases.
-    Do not generate any instructions 
-
+    Return only the Python code. Do not include explanations, comments, or docstrings
+    
     Code:
     {code}
     """
 
     response = client.chat.completions.create(
         model=MODEL,
-        messages=[{"role": "user", "content": prompt}]
+        messages=[
+            {"role": "system", "content": "You are an expert Python developer. Write only the code, no explanations ,  comments, or docstrings."},
+        {"role": "user", "content": prompt}
+            
     )
 
     return response.choices[0].message.content
