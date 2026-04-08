@@ -142,7 +142,7 @@ def run_pytest_and_collect_feedback(test_code, source_file):
             capture_output=True,
             text=True
         )
-        print( "Coverage generated "+str(result.stdout) + "\n" + str(result.stderr))
+        print( "Coverage generated ")
 
         return result.stdout + "\n" + result.stderr
 
@@ -167,39 +167,41 @@ def refine_until_strong(file_path, max_attempts=5):
         # 2. Run pytest + coverage
         feedback = run_pytest_and_collect_feedback(test_code, filename)
 
-        
+        print("Feedback after pytest "+str(feedback))
 
         # 3. Auto‑fix import errors
         if "ImportError" in feedback or "ModuleNotFoundError" in feedback:
             print("Import error")
             test_code = generate_tests_file(code, filename, coverage_feedback=f"""
         
-        Fix the import errors shown below.
-
-        Replace the import with EXACTLY this block:
-
-        import sys
-        import os
-        sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-        import RequestAPI
-
-        Do NOT use 'import src.RequestAPI'.
-        Do NOT invent modules.
-        {feedback}
-        
-        """
-)
+                    Fix the import errors shown below.
+            
+                    Replace the import with EXACTLY this block:
+            
+                    import sys
+                    import os
+                    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+                    import RequestAPI
+            
+                    Do NOT use 'import src.RequestAPI'.
+                    Do NOT invent modules.
+                    {feedback}
+                    
+                    """
+            )
             attempt += 1
             continue
 
         # 4. Coverage‑guided refinement
         if "coverage" in feedback.lower() or "missing" in feedback.lower():
+            print("COverage missing feedback "+ str(feedback))
             test_code = generate_tests_file(code, filename, coverage_feedback=feedback)
             attempt += 1
             continue
 
         # 5. Runtime errors
         if "E   " in feedback:
+            print("Runtime errors found")
             test_code = generate_tests_file(code, filename, coverage_feedback=feedback)
             attempt += 1
             continue
