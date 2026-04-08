@@ -1,32 +1,27 @@
-import sys
-import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from src import RequestAPI
 
-import RequestAPI
-
-class DummyResponse:
+class MockResponse:
     def __init__(self, data):
         self.data = data
     def json(self):
         return self.data
 
 def test_get_data(monkeypatch):
-    expected = {"id": 1}
-    def fake_get(url):
-        return DummyResponse(expected)
-    monkeypatch.setattr(RequestAPI.requests, "get", fake_get)
-    assert RequestAPI.get_data("http://example.com") == expected
+    def mock_get(url):
+        return MockResponse({"url": url})
+    monkeypatch.setattr(RequestAPI.requests, "get", mock_get)
+    assert RequestAPI.get_data("http://example.com") == {"url": "http://example.com"}
 
 def test_post_data(monkeypatch):
-    expected = {"ok": True}
-    def fake_post(url, json):
-        return DummyResponse(expected)
-    monkeypatch.setattr(RequestAPI.requests, "post", fake_post)
-    assert RequestAPI.post_data("http://example.com", {"title": "Test"}) == expected
+    def mock_post(url, json):
+        return MockResponse({"url": url, "json": json})
+    monkeypatch.setattr(RequestAPI.requests, "post", mock_post)
+    payload = {"title": "Test"}
+    assert RequestAPI.post_data("http://example.com", payload) == {"url": "http://example.com", "json": payload}
 
 def test_put_data(monkeypatch):
-    expected = {"updated": True}
-    def fake_put(url, json):
-        return DummyResponse(expected)
-    monkeypatch.setattr(RequestAPI.requests, "put", fake_put)
-    assert RequestAPI.put_data("http://example.com", {"title": "Updated"}) == expected
+    def mock_put(url, json):
+        return MockResponse({"url": url, "json": json})
+    monkeypatch.setattr(RequestAPI.requests, "put", mock_put)
+    payload = {"title": "Updated"}
+    assert RequestAPI.put_data("http://example.com", payload) == {"url": "http://example.com", "json": payload}
