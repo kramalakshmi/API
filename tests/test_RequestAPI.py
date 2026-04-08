@@ -3,7 +3,8 @@ import pytest
 from unittest import mock
 import requests
 from RequestAPI import get_request, post_request, put_request, delete_request  # replace 'your_module' with the actual name of your Python file
-
+import sys
+sys.path.append('../')
 # Mock responses for the API calls
 mock_get_response = mock.Mock()
 mock_post_response = mock.Mock()
