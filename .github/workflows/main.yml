@@ -21,7 +21,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip setuptools wheel
-          pip install pytest openai PyGithub requests requests-mock typed_ast pytest-cov
+          pip install pytest openai PyGithub requests requests-mock typed_ast pytest-cov GitPython
 
      
       - name: Run test generator agent
