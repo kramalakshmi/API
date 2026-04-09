@@ -251,8 +251,8 @@ def refine_until_strong(file_path, max_attempts=5):
             covePer= int(match.group(1))
             if match:
                 print("COverage percentage "+str(covePer ))
-            if covePer > = 90:
-                return test_code
+                if covePer >= 90:
+                    return test_code
             
 
             print("COverage missing feedback "+ str(feedback))
