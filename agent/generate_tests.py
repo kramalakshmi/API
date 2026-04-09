@@ -143,6 +143,14 @@ def run_pytest_and_collect_feedback(test_code, source_file):
     with tempfile.TemporaryDirectory() as tmp:
         test_path = f"{tmp}/test_generated.py"
         src_path = f"{tmp}/{filename}"
+        print("Sanity check import:")
+        try:
+            import sys, os
+            sys.path.append(tmp)  # tmp is your TemporaryDirectory path
+            import RequestAPI
+            print("SUCCESS: RequestAPI imported")
+        except Exception as e:
+            print("FAILED:", e)
 
         with open(test_path, "w") as f:
             f.write(test_code)
