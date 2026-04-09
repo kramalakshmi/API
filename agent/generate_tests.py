@@ -59,6 +59,7 @@ def main():
 
 
 def commit_file(path, content):
+    print("Path "+ path)
     g = Github(auth=auth)
     repo = g.get_repo("kramalakshmi/API")
 
@@ -156,11 +157,7 @@ def run_pytest_and_collect_feedback(test_code, source_file):
             context = f.read()
             print(context)
 
-        with open(src_path, "r") as f:
-            print("#######################   Source ccode ######################")
-            
-            context = f.read()
-            print(context)
+        
         
         
         print("Sanity check import:")
