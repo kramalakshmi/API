@@ -158,11 +158,21 @@ def run_pytest_and_collect_feedback(test_code, source_file):
             context = f.read()
             print(context)
 
-        
+            # Run pytest with coverage on the specific source file
+            result = subprocess.run(
+                ["pytest", "--maxfail=1", "--disable-warnings", "-q",
+                 "--cov", src_path, "--cov-report=term-missing"],
+                cwd=tmp,
+                capture_output=True,
+                text=True
+            )
+
+        '''
         result = subprocess.run(["pytest", "--maxfail=1", "--disable-warnings", "-q", "--cov", src_path],
             capture_output=True,
             text=True
         )
+        '''
         print( "Coverage generated "+str(result.stdout) + "\n" + str(result.stderr))
 
         return result.stdout + "\n" + result.stderr
