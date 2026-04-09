@@ -64,9 +64,12 @@ def commit_file(path, content):
     g = Github(auth=auth)
     repo = g.get_repo("kramalakshmi/API")
     print("Path "+ path)
+   
+    
     try:
         #repo = git.Repo(os.getcwd())
-        
+        repo = g.Repo('.')
+    
         # Get the name of the active branch
         current_branch = repo.active_branch.name
         print(f"Current branch: {current_branch}")
