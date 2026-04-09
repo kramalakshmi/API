@@ -110,7 +110,7 @@ def generate_tests_file(code, filename, error=None, coverage_feedback=None):
     import sys
     import os
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '.')))
-    import RequestAPI
+    #import RequestAPI
 
 
     Then import all filenames under src folder
