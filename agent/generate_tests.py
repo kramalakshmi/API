@@ -143,22 +143,7 @@ def run_pytest_and_collect_feedback(test_code, source_file):
     with tempfile.TemporaryDirectory() as tmp:
         test_path = f"{tmp}/test_generated.py"
         src_path = f"{tmp}/{filename}.py"
-        print(src_path)
-        print("Sanity check import:")
-        try:
-            import sys, os
-            print(os.listdir(tmp))
-            print(test_path)
-            print(src_path)
-            print(os.getcwd())
-            sys.path.append(os.getcwd())
-
-            sys.path.append(tmp)  # tmp is your TemporaryDirectory path
-            import RequestAPI
-            print("SUCCESS: RequestAPI imported")
-        except Exception as e:
-            print("FAILED:", e)
-
+       
         with open(test_path, "w") as f:
             f.write(test_code)
 
@@ -177,15 +162,31 @@ def run_pytest_and_collect_feedback(test_code, source_file):
             
             context = f.read()
             print(context)
+        print(os.listdir(tmp))
+        
+        print("Sanity check import:")
+        try:
+            import sys, os
+            
+            print(test_path)
+            print(src_path)
+            print(os.getcwd())
+            sys.path.append(os.getcwd())
 
-            # Run pytest with coverage on the specific source file
-            result = subprocess.run(
-                ["pytest", "--maxfail=1", "--disable-warnings", "-q",
-                 "--cov", src_path, "--cov-report=term-missing"],
-                cwd=tmp,
-                capture_output=True,
-                text=True
-            )
+            sys.path.append(tmp)  # tmp is your TemporaryDirectory path
+            import RequestAPI
+            print("SUCCESS: RequestAPI imported")
+        except Exception as e:
+            print("FAILED:", e)
+
+        # Run pytest with coverage on the specific source file
+        result = subprocess.run(
+            ["pytest", "--maxfail=1", "--disable-warnings", "-q",
+             "--cov", src_path, "--cov-report=term-missing"],
+            cwd=tmp,
+            capture_output=True,
+            text=True
+        )
 
         '''
         result = subprocess.run(["pytest", "--maxfail=1", "--disable-warnings", "-q", "--cov", src_path],
