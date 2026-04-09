@@ -139,7 +139,7 @@ def run_pytest_and_collect_feedback(test_code, source_file):
             code = Path(source_file).read_text()
             f.write(code)
 
-        with open(test_path, "r") as f:")
+        with open(test_path, "r") as f:
             print("#######################   TESTING ccode ######################")
             context = f.read()
             print(context)
