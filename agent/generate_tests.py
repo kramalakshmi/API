@@ -136,6 +136,8 @@ def incremental_test_generation(source_file):
     # Test file exists → run coverage
     print("Test file exists. Running coverage...")
     module_name = os.path.splitext(os.path.basename(source_file))[0]
+    print(os.path.basename(source_file))
+    print(module_name )
     cov_output = run_coverage_for_module(module_name, cwd=".")
 
     missing_funcs = get_uncovered_functions(cov_output)
