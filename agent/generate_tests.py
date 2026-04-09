@@ -52,7 +52,8 @@ def main():
         if not "___init__" in str(file): 
             print(str(Path(file).stem))
             
-            test_code = refine_until_strong(file)
+            #test_code = refine_until_strong(file)
+            test_code="import os"
             test_file = test_dir / f"test_{Path(file).stem}.py"
             commit_file(str(test_file), test_code)
             
@@ -64,7 +65,12 @@ def commit_file(path, content):
     repo = g.get_repo("kramalakshmi/API")
     print("Path "+ path)
     try:
-        existing = repo.get_contents(path)
+        #repo = git.Repo(os.getcwd())
+        
+        # Get the name of the active branch
+        current_branch = repo.active_branch.name
+        print(f"Current branch: {current_branch}")
+        existing = repo.get_contents(path,ref=branch.name)
         print("Path "+ path)
         print("Existing Code "+str(existing))
         repo.update_file(
