@@ -128,6 +128,7 @@ def incremental_test_generation(source_file):
     print("New tests added.")
 
 def main():
+    
     src_dir = Path("src")
     test_dir = Path("tests")
     test_dir.mkdir(exist_ok=True)
@@ -135,11 +136,13 @@ def main():
     for file in src_dir.glob("*.py"):
         if not "___init__" in str(file): 
             print(str(Path(file).stem))
-            
+            incremental_test_generation(file)
+            '''
             test_code = refine_until_strong(file)
             
             test_file = test_dir / f"test_{Path(file).stem}.py"
             commit_file(str(test_file), test_code)
+            '''
             
 
 
