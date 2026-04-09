@@ -59,12 +59,13 @@ def main():
 
 
 def commit_file(path, content):
-    print("Path "+ path)
+    
     g = Github(auth=auth)
     repo = g.get_repo("kramalakshmi/API")
-
+    print("Path "+ path)
     try:
         existing = repo.get_contents(path)
+        print("Path "+ path)
         print("Existing Code "+str(existing))
         repo.update_file(
             path, "Update generated tests", content, existing.sha, branch= "AgenticAI"
