@@ -147,6 +147,7 @@ def run_pytest_and_collect_feedback(test_code, source_file):
         print("Sanity check import:")
         try:
             import sys, os
+            print(tmp)
             sys.path.append(tmp)  # tmp is your TemporaryDirectory path
             import RequestAPI
             print("SUCCESS: RequestAPI imported")
