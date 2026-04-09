@@ -109,12 +109,11 @@ def generate_tests_file(code, filename, error=None, coverage_feedback=None):
 
     import sys
     import os
-    print(os.path.abspath(os.path.join(os.path.dirname(__file__))
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '.')))
     import RequestAPI
 
 
-
+    Then import all filenames under src folder
     Do NOT use 'import src.RequestAPI'.
     Do NOT invent modules.
     Source code:
@@ -249,9 +248,11 @@ def refine_until_strong(file_path, max_attempts=5):
         # 4. Coverage‑guided refinement
         if "coverage" in feedback.lower() or "missing" in feedback.lower():
             match = re.search(r"TOTAL\s+\d+\s+\d+\s+(\d+)%", feedback)
+            covePer= int(match.group(1))
             if match:
-                print("COverage percentage "+str( int(match.group(1))))
-    
+                print("COverage percentage "+str(covePer ))
+            if covePer > = 90:
+                return test_code
             
 
             print("COverage missing feedback "+ str(feedback))
