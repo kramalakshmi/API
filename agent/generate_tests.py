@@ -142,7 +142,7 @@ def run_pytest_and_collect_feedback(test_code, source_file):
     print ("Code generated" +test_code)
     with tempfile.TemporaryDirectory() as tmp:
         test_path = f"{tmp}/test_generated.py"
-        src_path = f"{tmp}/{filename}"
+        src_path = f"{tmp}/{filename}.py"
         print("Sanity check import:")
         try:
             import sys, os
