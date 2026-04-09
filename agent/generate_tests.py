@@ -41,8 +41,91 @@ Just clean, minimal test code.
     )
 
     return response.choices[0].message.content
+    
+def get_function_names(source_code):
+    tree = ast.parse(source_code)
+    return [
+        node.name
+        for node in tree.body
+        if isinstance(node, ast.FunctionDef)
+    ]
+
+def get_test_file_path(source_file):
+    base = os.path.splitext(os.path.basename(source_file))[0]
+    test_file = f"tests/test_{base}.py"
+    return test_file if os.path.exists(test_file) else None
 
 
+
+def run_coverage_for_module(module_name, cwd):
+    result = subprocess.run(
+        [
+            "pytest",
+            "-q",
+            f"--cov={module_name}",
+            "--cov-report=term-missing",
+        ],
+        cwd=cwd,
+        capture_output=True,
+        text=True
+    )
+    return result.stdout + "\n" + result.stderr
+    
+def get_uncovered_functions(coverage_output):
+    missing_line = None
+    for line in coverage_output.splitlines():
+        if "Missing" in line:
+            missing_line = line
+            break
+
+    if not missing_line:
+        return []
+
+    # Example: "Missing: func_a:5, func_c:12"
+    parts = missing_line.split("Missing")[-1].strip(": ").split(",")
+    funcs = {p.split(":")[0].strip() for p in parts}
+    return list(funcs)
+
+def append_tests(test_file, new_tests):
+    with open(test_file, "a") as f:
+        f.write("\n" + new_tests + "\n")
+
+
+def incremental_test_generation(source_file):
+    with open(source_file) as f:
+        source_code = f.read()
+
+    funcs = get_function_names(source_code)
+    test_file = get_test_file_path(source_file)
+
+    # If no test file exists → generate full test suite
+    if not test_file:
+        print("No test file found. Generating full test suite.")
+        '''
+        tests = generate_tests_for_missing_functions(source_code, funcs)
+        os.makedirs("tests", exist_ok=True)
+        test_file = f"tests/test_{os.path.basename(source_file)}"
+        with open(test_file, "w") as f:
+            f.write(tests)
+        return
+        '''
+    # Test file exists → run coverage
+    print("Test file exists. Running coverage...")
+    module_name = os.path.splitext(os.path.basename(source_file))[0]
+    cov_output = run_coverage_for_module(module_name, cwd=".")
+
+    missing_funcs = get_uncovered_functions(cov_output)
+
+    if not missing_funcs:
+        print("All functions already covered.")
+        return
+
+    print("Missing coverage for:", missing_funcs)
+
+    new_tests = generate_tests_for_missing_functions(source_code, missing_funcs)
+    append_tests(test_file, new_tests)
+
+    print("New tests added.")
 
 def main():
     src_dir = Path("src")
@@ -53,8 +136,8 @@ def main():
         if not "___init__" in str(file): 
             print(str(Path(file).stem))
             
-            #test_code = refine_until_strong(file)
-            test_code="import os"
+            test_code = refine_until_strong(file)
+            
             test_file = test_dir / f"test_{Path(file).stem}.py"
             commit_file(str(test_file), test_code)
             
