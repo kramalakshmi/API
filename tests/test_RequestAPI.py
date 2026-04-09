@@ -1,30 +1,28 @@
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '.')))
+from unittest.mock import Mock, patch
 import RequestAPI
-
-class DummyResponse:
-    def __init__(self, data):
-        self.data=data
-    def json(self):
-        return self.data
-
-def test_get_data(monkeypatch):
-    def fake_get(url):
-        return DummyResponse({"url":url,"ok":True})
-    monkeypatch.setattr(RequestAPI.requests,"get",fake_get)
-    assert RequestAPI.get_data("http://example.com")=={"url":"http://example.com","ok":True}
-
-def test_post_data(monkeypatch):
-    def fake_post(url,json):
-        return DummyResponse({"url":url,"json":json})
-    monkeypatch.setattr(RequestAPI.requests,"post",fake_post)
-    payload={"title":"Test"}
-    assert RequestAPI.post_data("http://example.com",payload)=={"url":"http://example.com","json":payload}
-
-def test_put_data(monkeypatch):
-    def fake_put(url,json):
-        return DummyResponse({"url":url,"json":json,"updated":True})
-    monkeypatch.setattr(RequestAPI.requests,"put",fake_put)
-    payload={"title":"Updated"}
-    assert RequestAPI.put_data("http://example.com/1",payload)=={"url":"http://example.com/1","json":payload,"updated":True}
+def test_get_data():
+    response = Mock()
+    response.json.return_value = {"id": 1}
+    with patch("RequestAPI.requests.get", return_value=response) as mock_get:
+        result = RequestAPI.get_data("http://example.com")
+    mock_get.assert_called_once_with("http://example.com")
+    assert result == {"id": 1}
+def test_post_data():
+    response = Mock()
+    response.json.return_value = {"title": "Test"}
+    payload = {"title": "Test"}
+    with patch("RequestAPI.requests.post", return_value=response) as mock_post:
+        result = RequestAPI.post_data("http://example.com", payload)
+    mock_post.assert_called_once_with("http://example.com", json=payload)
+    assert result == {"title": "Test"}
+def test_put_data():
+    response = Mock()
+    response.json.return_value = {"title": "Updated"}
+    payload = {"title": "Updated"}
+    with patch("RequestAPI.requests.put", return_value=response) as mock_put:
+        result = RequestAPI.put_data("http://example.com", payload)
+    mock_put.assert_called_once_with("http://example.com", json=payload)
+    assert result == {"title": "Updated"}
