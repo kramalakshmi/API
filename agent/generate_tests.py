@@ -1,5 +1,6 @@
 from pathlib import Path
 from github import Github
+from git import Repo
 from github import Auth
 import os
 from openai import OpenAI
@@ -68,8 +69,11 @@ def commit_file(path, content):
     
     try:
         #repo = git.Repo(os.getcwd())
-        repo = g.Repo('.')
-    
+        local _repo=Repo(search_parent_directories=True)
+        branch_name=local_repo.active_branch.name
+        remote_url= local_repo.remotes.origin.url
+        print(remote_url)
+        print(branch_name , repo.default_branch)
         # Get the name of the active branch
         current_branch = repo.active_branch.name
         print(f"Current branch: {current_branch}")
