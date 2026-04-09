@@ -162,12 +162,12 @@ def run_pytest_and_collect_feedback(test_code, source_file):
             
             context = f.read()
             print(context)
-        print(os.listdir(tmp))
+        
         
         print("Sanity check import:")
         try:
             import sys, os
-            
+            print(os.listdir(tmp))
             print(test_path)
             print(src_path)
             print(os.getcwd())
