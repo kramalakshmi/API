@@ -107,7 +107,7 @@ def generate_tests_file(code, filename, error=None, coverage_feedback=None):
     Use ONLY valid imports based on this structure.
      Replace the import with EXACTLY this block:
             
-    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '.')))
+    
     import RequestAPI
 
 
