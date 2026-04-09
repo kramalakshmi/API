@@ -93,6 +93,7 @@ def run_coverage_for_module(module_name, cwd):
         capture_output=True,
         text=True
     )
+    print(str(result.stdout) + "\n" + str(result.stderr))
     return result.stdout + "\n" + result.stderr
     
 def get_uncovered_functions(coverage_output):
