@@ -68,6 +68,7 @@ def commit_file(path, content):
    
     
     try:
+        '''
         #repo = git.Repo(os.getcwd())
         local_repo=Repo(search_parent_directories=True)
         if local_repo.head.is_detached:
@@ -84,15 +85,16 @@ def commit_file(path, content):
         # Get the name of the active branch
         current_branch = repo.active_branch.name
         print(f"Current branch: {current_branch}")
-        existing = repo.get_contents(path,ref=branch.name)
+        '''
+        existing = repo.get_contents(path,ref="testGenAI")
         print("Path "+ path)
-        print("Existing Code "+str(existing))
+        
         repo.update_file(
-            path, "Update generated tests", content, existing.sha, branch= "AgenticAI"
+            path, "Update generated tests", content, existing.sha, branch= "testGenAI"
         )
     except:
         repo.create_file(
-            path, "Add generated tests", content , branch= "AgenticAI"
+            path, "Add generated tests", content , branch= "testGenAI"
         )
 
 
