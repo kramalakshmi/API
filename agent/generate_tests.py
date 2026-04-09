@@ -70,6 +70,13 @@ def commit_file(path, content):
     try:
         #repo = git.Repo(os.getcwd())
         local_repo=Repo(search_parent_directories=True)
+        if local_repo.head.is_detached:
+            # Handle the detached state (e.g., use the commit hash)
+            current_commit = local_repo.head.object.hexsha
+            print(f"Detached at: {current_commit}")
+        else:
+            # Safe to access active_branch
+            print(f"On branch: {local_repo.active_branch.name}")
         branch_name=local_repo.active_branch.name
         remote_url= local_repo.remotes.origin.url
         print(remote_url)
