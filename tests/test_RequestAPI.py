@@ -11,18 +11,23 @@ class DummyResponse:
 
 def test_get_data(monkeypatch):
     def fake_get(url):
-        return DummyResponse({"url": url, "method": "get"})
+        assert url == "http://example.com"
+        return DummyResponse({"id": 1})
     monkeypatch.setattr(RequestAPI.requests, "get", fake_get)
-    assert RequestAPI.get_data("http://example.com") == {"url": "http://example.com", "method": "get"}
+    assert RequestAPI.get_data("http://example.com") == {"id": 1}
 
 def test_post_data(monkeypatch):
     def fake_post(url, json):
-        return DummyResponse({"url": url, "payload": json, "method": "post"})
+        assert url == "http://example.com"
+        assert json == {"title": "Test"}
+        return DummyResponse({"ok": True})
     monkeypatch.setattr(RequestAPI.requests, "post", fake_post)
-    assert RequestAPI.post_data("http://example.com", {"a": 1}) == {"url": "http://example.com", "payload": {"a": 1}, "method": "post"}
+    assert RequestAPI.post_data("http://example.com", {"title": "Test"}) == {"ok": True}
 
 def test_put_data(monkeypatch):
     def fake_put(url, json):
-        return DummyResponse({"url": url, "payload": json, "method": "put"})
+        assert url == "http://example.com/1"
+        assert json == {"title": "Updated"}
+        return DummyResponse({"updated": True})
     monkeypatch.setattr(RequestAPI.requests, "put", fake_put)
-    assert RequestAPI.put_data("http://example.com/1", {"b": 2}) == {"url": "http://example.com/1", "payload": {"b": 2}, "method": "put"}
+    assert RequestAPI.put_data("http://example.com/1", {"title": "Updated"}) == {"updated": True}
