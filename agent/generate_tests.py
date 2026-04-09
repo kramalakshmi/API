@@ -50,6 +50,30 @@ def get_function_names(source_code):
         if isinstance(node, ast.FunctionDef)
     ]
 
+def generate_tests_for_missing_functions(source_code, missing_funcs):
+    prompt = f"""
+Generate pytest tests ONLY for these functions:
+{missing_funcs}
+
+Source code:
+{source_code}
+
+Rules:
+- No comments
+- No blank lines
+- Use this import header:
+
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+import RequestAPI
+"""
+    resp = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "user", "content": prompt}]
+    )
+    return resp.choices[0].message.content
+
 def get_test_file_path(source_file):
     base = os.path.splitext(os.path.basename(source_file))[0]
     test_file = f"tests/test_{base}.py"
