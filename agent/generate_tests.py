@@ -69,7 +69,7 @@ def commit_file(path, content):
     
     try:
         #repo = git.Repo(os.getcwd())
-        local _repo=Repo(search_parent_directories=True)
+        local_repo=Repo(search_parent_directories=True)
         branch_name=local_repo.active_branch.name
         remote_url= local_repo.remotes.origin.url
         print(remote_url)
