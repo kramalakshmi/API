@@ -109,6 +109,7 @@ def generate_tests_file(code, filename, error=None, coverage_feedback=None):
 
     import sys
     import os
+    print(os.path.abspath(os.path.join(os.path.dirname(__file__))
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '.')))
     import RequestAPI
 
@@ -214,6 +215,7 @@ def refine_until_strong(file_path, max_attempts=5):
                     import sys
                     import os
                     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '.')))
+                    print(os.path.abspath(os.path.join(os.path.dirname(__file__))
                     import RequestAPI
 
             
