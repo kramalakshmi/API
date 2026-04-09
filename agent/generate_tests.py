@@ -210,7 +210,7 @@ def refine_until_strong(file_path, max_attempts=5):
             
                     import sys
                     import os
-                    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+                    
                     import RequestAPI
             
                     Do NOT use 'import src.RequestAPI'.
