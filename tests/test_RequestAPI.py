@@ -29,4 +29,3 @@ def test_put_data(monkeypatch):
         return MockResponse({"title": json["title"]})
     monkeypatch.setattr(requests, "put", mock_put)
     assert RequestAPI.put_data("http://example.com", {"title": "Updated"}) == {"title": "Updated"}
-
