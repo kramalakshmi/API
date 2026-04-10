@@ -306,34 +306,29 @@ def write_to_github(path, message, content, branch="main"):
 
 def generate_tests_file(code, filename, error=None, coverage_feedback=None):
     
-    
+    print("In generate_tests_file")
     prompt = f"""
     Generate minimal pytest tests for {filename}.
-    No comments, no blank lines, no placeholders.
+  
+
     Ensure valid Python.
 Rules:
-
+  - No comments, no explanations, no extra text.
 - External imports must be returned exactly as they appear.
-- Project imports must NOT be returned; use the provided header instead.
+- For Project imports use the provided header instead.
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '.')))
     
-- Then import all filenames under src folder
+- Then import {fileName}
 - Do not guess or invent imports.
 - Do not include comments or explanations in the output.
+- - Do NOT guess filenames; use only the filenames provided to you.
 
     Here is the repository structure:
     {repo_structure}
     
-    Use ONLY valid imports based on this structure.
-     Replace the import with EXACTLY this block:
-
-    import sys
-    import os
-    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '.')))
     
-    Then import all filenames under src folder
     
     Do NOT invent modules.
     Source code:
