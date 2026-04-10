@@ -132,3 +132,6 @@ def test_put_data_with_mocked_success(monkeypatch):
     monkeypatch.setattr(RequestAPI.requests, "put", mock_put)
     result = RequestAPI.put_data("http://example.com", {"x": 2})
     assert result == {"updated": True}
+
+def test_placeholder():
+    pass
