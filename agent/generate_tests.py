@@ -306,7 +306,7 @@ def write_to_github(path, message, content, branch="main"):
 
 def generate_tests_file(code, filename, error=None, coverage_feedback=None):
     print("In generate_tests_file")
-    source_name = str(Path(source_file).stem)
+    source_name = str(Path(filename).stem)
     
     prompt = f"""
     Generate minimal pytest tests for {filename}.
