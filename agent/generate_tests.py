@@ -305,8 +305,9 @@ def write_to_github(path, message, content, branch="main"):
         print(f"File '{path}' created successfully.")
 
 def generate_tests_file(code, filename, error=None, coverage_feedback=None):
-    
     print("In generate_tests_file")
+    source_name = str(Path(source_file).stem)
+    
     prompt = f"""
     Generate minimal pytest tests for {filename}.
   
@@ -320,7 +321,7 @@ import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '.')))
     
-- Then import {fileName}
+- Then import {source_name}
 - Do not guess or invent imports.
 - Do not include comments or explanations in the output.
 - - Do NOT guess filenames; use only the filenames provided to you.
