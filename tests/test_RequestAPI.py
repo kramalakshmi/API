@@ -54,3 +54,38 @@ def test_main_block(monkeypatch, capsys):
     assert "{'id': 1}" in out
     assert "{'title': 'Test'}" in out
     assert "{'title': 'Updated'}" in out
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '.')))
+import pytest
+from unittest.mock import Mock, patch
+from src import *
+def test_get_data():
+    url="https://example.com/data"
+    expected={"id":1,"name":"test"}
+    mock_response=Mock()
+    mock_response.json.return_value=expected
+    with patch("src.requests.get",return_value=mock_response) as mock_get:
+        result=get_data(url)
+    mock_get.assert_called_once_with(url)
+    assert result==expected
+def test_post_data():
+    url="https://example.com/data"
+    payload={"title":"Test"}
+    expected={"id":101,"title":"Test"}
+    mock_response=Mock()
+    mock_response.json.return_value=expected
+    with patch("src.requests.post",return_value=mock_response) as mock_post:
+        result=post_data(url,payload)
+    mock_post.assert_called_once_with(url,json=payload)
+    assert result==expected
+def test_put_data():
+    url="https://example.com/data/1"
+    payload={"title":"Updated"}
+    expected={"id":1,"title":"Updated"}
+    mock_response=Mock()
+    mock_response.json.return_value=expected
+    with patch("src.requests.put",return_value=mock_response) as mock_put:
+        result=put_data(url,payload)
+    mock_put.assert_called_once_with(url,json=payload)
+    assert result==expected
