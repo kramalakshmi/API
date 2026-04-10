@@ -8,7 +8,7 @@ import ast
 import subprocess
 import tempfile
 import re
-from coverage import Coveragef
+from coverage import Coverage
 
 repo_structure = """
         project/
