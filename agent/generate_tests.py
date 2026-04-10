@@ -8,7 +8,16 @@ import ast
 import subprocess
 import tempfile
 import re
+from coverage import Coverage
 
+repo_structure = """
+        project/
+            src/
+                __init__.py
+                RequestAPI.py
+            tests/
+                test_RequestAPI.py
+        """
 
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -42,9 +51,192 @@ Just clean, minimal test code.
 
     return response.choices[0].message.content
 
+def get_import_statements(code: str):
+    tree = ast.parse(code)
+    imports = []
 
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                imports.append(f"import {alias.name}" + (f" as {alias.asname}" if alias.asname else ""))
+        elif isinstance(node, ast.ImportFrom):
+            module = node.module or ""
+            names = ", ".join(
+                alias.name + (f" as {alias.asname}" if alias.asname else "")
+                for alias in node.names
+            )
+            imports.append(f"from {module} import {names}")
+
+    return imports
+
+
+def get_function_names(source_code):
+    tree = ast.parse(source_code)
+    return [
+        node.name
+        for node in tree.body
+        if isinstance(node, ast.FunctionDef)
+    ]
+
+def generate_tests_for_missing_functions(source_code, missing_funcs):
+    prompt = f"""
+Generate pytest tests ONLY for these functions:
+{missing_funcs}
+
+Source code:
+{source_code}
+
+Rules:
+- No comments
+- No blank lines
+- Return only code for missing functions
+- 
+- External imports must be returned exactly as they appear.
+- Project imports must NOT be returned; use the provided header instead.
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '.')))
+    
+- Then import all filenames under src folder
+- Do not guess or invent imports.
+- Do not include comments or explanations in the output.
+-Do NOT invent modules.
+    
+"""
+    resp = client.chat.completions.create(
+        model=MODEL,
+        messages=[{"role": "user", "content": prompt}]
+    )
+    return resp.choices[0].message.content
+
+def get_test_file_path(source_file):
+    base = os.path.splitext(os.path.basename(source_file))[0]
+    test_file = f"tests/test_{base}.py"
+    return test_file if os.path.exists(test_file) else None
+
+
+
+def run_coverage_for_module(module_name, cwd):
+    result = subprocess.run(
+        [
+            "pytest",
+            "-q",
+            f"--cov={module_name}",
+            "--cov-report=term-missing",
+        ],
+        cwd=cwd,
+        capture_output=True,
+        text=True
+    )
+
+
+
+    
+    print(str(result.stdout) + "\n" + str(result.stderr))
+    return result.stdout + "\n" + result.stderr
+    
+def get_uncovered_functions(coverage_output,source_file,tmp):
+    #print(coverage_output)
+    missing_line = None
+    
+    lines = coverage_output.splitlines()
+    for i in range(1,len(lines)):
+        current_line = lines[i]
+        if "%" in current_line:
+            missing_line = current_line
+            break
+   
+    if not missing_line:
+        return []
+    print("missing_line "+missing_line)
+    # Example: "Missing: func_a:5, func_c:12"
+    print(tmp)
+    missing = get_missing_functions(
+    source_path=os.path.join(tmp, source_file),
+    coverage_file=os.path.join(tmp, ".coverage")
+    )
+    
+    print("Missing:", ", ".join(missing))
+    missingList = ", ".join(missing)
+
+    parts = missingList.split("Missing")[-1].strip(": ").split(",")
+    funcs = {p.split(":")[0].strip() for p in parts}
+    print("List of functions "+str( list(funcs)))
+    return list(funcs)
+
+
+
+
+def get_missing_functions(source_path, coverage_file):
+    cov = Coverage(data_file=coverage_file)
+    cov.load()
+
+    analysis = cov.analysis2(source_path)
+    missing_lines = analysis[3]  # list of missing line numbers
+
+    with open(source_path) as f:
+        tree = ast.parse(f.read())
+
+    # Map line numbers → function names
+    func_map = {}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.FunctionDef):
+            for lineno in range(node.lineno, node.end_lineno + 1):
+                func_map[lineno] = node.name
+
+    # Build output
+    missing = []
+    for line in missing_lines:
+        func = func_map.get(line, None)
+        if func:
+            missing.append(f"{func}:{line}")
+
+    return missing
+    
+
+
+def incremental_test_generation(source_file):
+    with open(source_file) as f:
+        source_code = f.read()
+
+    funcs = get_function_names(source_code)
+    test_file = get_test_file_path(source_file)
+
+    # If no test file exists → generate full test suite
+    if not test_file:
+        print("No test file found. Generating full test suite.")
+        test_code = refine_until_strong(source_file)
+        test_file = Path("tests") / f"test_{Path(source_file).stem}.py"
+        commit_file(str(test_file), test_code)
+        
+    # Test file exists → run coverage
+    print("Test file exists. Running coverage... for "+test_file)
+    module_name = os.path.splitext(os.path.basename(source_file))[0]
+    print(os.path.basename(source_file))
+    print(module_name )
+    #cov_output = run_coverage_for_module(module_name, cwd=os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+    test_code = Path(test_file).read_text()
+    #cov_output= run_pytest_and_collect_feedback(test_code, source_file)
+    missing_funcs= run_pytest_and_collect_feedback(test_code, source_file,0)
+    #missing_funcs = get_uncovered_functions(cov_output,os.path.basename(source_file),tmp)
+
+    if not missing_funcs:
+        print("All functions already covered.")
+        return
+
+    print("Missing coverage for:", missing_funcs)
+
+    new_tests = generate_tests_for_missing_functions(source_code, missing_funcs)
+    print(new_tests)
+    #print(get_import_statements(new_tests))
+    content = test_code + "\n" + new_tests + "\n"
+    commit_file(test_file, content)
+    
+
+    print("New tests added.")
 
 def main():
+    
     src_dir = Path("src")
     test_dir = Path("tests")
     test_dir.mkdir(exist_ok=True)
@@ -52,11 +244,13 @@ def main():
     for file in src_dir.glob("*.py"):
         if not "___init__" in str(file): 
             print(str(Path(file).stem))
+            incremental_test_generation(file)
+            '''
+            test_code = refine_until_strong(file)
             
-            #test_code = refine_until_strong(file)
-            test_code="import os"
             test_file = test_dir / f"test_{Path(file).stem}.py"
             commit_file(str(test_file), test_code)
+            '''
             
 
 
@@ -68,6 +262,7 @@ def commit_file(path, content):
    
     
     try:
+        '''
         #repo = git.Repo(os.getcwd())
         local_repo=Repo(search_parent_directories=True)
         if local_repo.head.is_detached:
@@ -84,15 +279,16 @@ def commit_file(path, content):
         # Get the name of the active branch
         current_branch = repo.active_branch.name
         print(f"Current branch: {current_branch}")
-        existing = repo.get_contents(path,ref=branch.name)
+        '''
+        existing = repo.get_contents(path,ref="testGenAI")
         print("Path "+ path)
-        print("Existing Code "+str(existing))
+        
         repo.update_file(
-            path, "Update generated tests", content, existing.sha, branch= "AgenticAI"
+            path, "Update generated tests", content, existing.sha, branch= "testGenAI"
         )
     except:
         repo.create_file(
-            path, "Add generated tests", content , branch= "AgenticAI"
+            path, "Add generated tests", content , branch= "testGenAI"
         )
 
 
@@ -109,34 +305,27 @@ def write_to_github(path, message, content, branch="main"):
         print(f"File '{path}' created successfully.")
 
 def generate_tests_file(code, filename, error=None, coverage_feedback=None):
-    repo_structure = """
-        project/
-            src/
-                __init__.py
-                RequestAPI.py
-            tests/
-                test_RequestAPI.py
-        """
-
+    print("In generate_tests_file")
+    source_name = str(Path(filename).stem)
     
     prompt = f"""
     Generate minimal pytest tests for {filename}.
-    No comments, no blank lines, no placeholders.
+  
+
     Ensure valid Python.
-    Here is the repository structure:
-    {repo_structure}
+Rules:
+  - No comments, no explanations, no extra text.
+- External imports must be returned exactly as they appear.
+- For Project imports use the provided header instead.
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '.')))
     
-    Use ONLY valid imports based on this structure.
-     Replace the import with EXACTLY this block:
+- Then import {source_name}
+- Do not guess or invent imports.
+- Do not include comments or explanations in the output.
+- - Do NOT guess filenames; use only the filenames provided to you.
 
-    import sys
-    import os
-    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '.')))
-    
-
-
-    Then import all filenames under src folder
-    Do NOT use 'import src.RequestAPI'.
     Do NOT invent modules.
     Source code:
     {code}
@@ -157,7 +346,7 @@ def generate_tests_file(code, filename, error=None, coverage_feedback=None):
 
 
 
-def run_pytest_and_collect_feedback(test_code, source_file):
+def run_pytest_and_collect_feedback(test_code, source_file,flag):
     filename = str(Path(source_file).stem)
     print("Running pytest and collecting feedback")
     print ("Code generated" )
@@ -178,8 +367,6 @@ def run_pytest_and_collect_feedback(test_code, source_file):
             context = f.read()
             print(context)
 
-        
-        
         
         print("Sanity check import:")
         try:
@@ -212,8 +399,13 @@ def run_pytest_and_collect_feedback(test_code, source_file):
         )
         '''
         print( "Coverage generated "+str(result.stdout) + "\n" + str(result.stderr))
-
-        return result.stdout + "\n" + result.stderr
+        cov_output= result.stdout + "\n" + result.stderr
+        
+        if flag == 0:
+            missing_funcs = get_uncovered_functions(cov_output,os.path.basename(source_file),tmp)
+            return missing_funcs
+        else:
+            return result.stdout + "\n" + result.stderr 
 
 
 def refine_until_strong(file_path, max_attempts=5):
@@ -234,7 +426,7 @@ def refine_until_strong(file_path, max_attempts=5):
             continue
 
         # 2. Run pytest + coverage
-        feedback = run_pytest_and_collect_feedback(test_code, filename)
+        feedback = run_pytest_and_collect_feedback(test_code, filename,1)
 
         print("Feedback after pytest "+str(feedback))
 
