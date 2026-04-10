@@ -413,7 +413,7 @@ def run_pytest_and_collect_feedback(test_code, source_file):
             if covePer == 100:
                 return result.stdout + "\n" + result.stderr, covePer,[]
             else:
-                missing_funcs = get_uncovered_functions(cov_output,os.path.basename(source_file),tmp)
+                missing_funcs = get_uncovered_functions(cov_output,os.path.basename(source_file),tmp+"/src")
                 return result.stdout + "\n" + result.stderr,covePer,missing_funcs
             
                  
