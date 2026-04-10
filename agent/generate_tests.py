@@ -279,15 +279,15 @@ def commit_file(path, content):
         current_branch = repo.active_branch.name
         print(f"Current branch: {current_branch}")
         '''
-        existing = repo.get_contents(path,ref="testGenAI")
+        existing = repo.get_contents(path,ref="testGenAICreation")
         print("Path "+ path)
         
         repo.update_file(
-            path, "Update generated tests", content, existing.sha, branch= "testGenAI"
+            path, "Update generated tests", content, existing.sha, branch= "testGenAICreation"
         )
     except:
         repo.create_file(
-            path, "Add generated tests", content , branch= "testGenAI"
+            path, "Add generated tests", content , branch= "testGenAICreation"
         )
 
 
