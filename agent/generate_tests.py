@@ -173,6 +173,8 @@ def get_missing_functions(source_path, coverage_file):
 
     analysis = cov.analysis2(source_path)
     missing_lines = analysis[3]  # list of missing line numbers
+    print("Missing lines:", missing_lines)
+
 
     with open(source_path) as f:
         tree = ast.parse(f.read())
@@ -219,7 +221,7 @@ def incremental_test_generation(source_file):
         test_code = Path(test_file).read_text()
         #cov_output= run_pytest_and_collect_feedback(test_code, source_file)
         feedback, coverage_percentage, missing_funcs= run_pytest_and_collect_feedback(test_code, source_file)
-        #missing_funcs = get_uncovered_functions(cov_output,os.path.basename(source_file),tmp)
+        
 
         if not missing_funcs:
             print("All functions already covered.")
