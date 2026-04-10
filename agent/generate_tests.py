@@ -95,7 +95,7 @@ Rules:
 - Project imports must NOT be returned; use the provided header instead.
 import sys
 import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '.')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
     
 - Then import all filenames under src folder
 - Do not guess or invent imports.
@@ -279,15 +279,15 @@ def commit_file(path, content):
         current_branch = repo.active_branch.name
         print(f"Current branch: {current_branch}")
         '''
-        existing = repo.get_contents(path,ref="testGenAI")
+        existing = repo.get_contents(path,ref="GenAItestCase")
         print("Path "+ path)
         
         repo.update_file(
-            path, "Update generated tests", content, existing.sha, branch= "testGenAI"
+            path, "Update generated tests", content, existing.sha, branch= "GenAItestCase"
         )
     except:
         repo.create_file(
-            path, "Add generated tests", content , branch= "testGenAI"
+            path, "Add generated tests", content , branch= "GenAItestCase"
         )
 
 
@@ -318,7 +318,7 @@ Rules:
 - For Project imports use the provided header instead.
 import sys
 import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '.')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
     
 - Then import {source_name}
 - Do not guess or invent imports.
@@ -350,8 +350,8 @@ def run_pytest_and_collect_feedback(test_code, source_file,flag):
     print("Running pytest and collecting feedback")
     print ("Code generated" )
     with tempfile.TemporaryDirectory() as tmp:
-        test_path = f"{tmp}/test_generated.py"
-        src_path = f"{tmp}/{filename}.py"
+        test_path = f"{tmp}/tests/test_generated.py"
+        src_path = f"{tmp}/src/{filename}.py"
        
         with open(test_path, "w") as f:
             f.write(test_code)
@@ -440,7 +440,7 @@ def refine_until_strong(file_path, max_attempts=5):
             
                     import sys
                     import os
-                    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '.')))
+                    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
                     print(os.path.abspath(os.path.join(os.path.dirname(__file__))
                     import RequestAPI
 
