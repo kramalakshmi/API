@@ -126,7 +126,7 @@ def get_uncovered_functions(coverage_output,source_file,tmp):
 
     parts = missing_line.split("Missing")[-1].strip(": ").split(",")
     funcs = {p.split(":")[0].strip() for p in parts}
-    print("List of functions "+ list(funcs))
+    print("List of functions "+str( list(funcs)))
     return list(funcs)
 
 
