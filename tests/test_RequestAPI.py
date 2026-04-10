@@ -16,3 +16,6 @@ def test_get_data(monkeypatch):
     monkeypatch.setattr(requests, "get", mock_get)
     assert RequestAPI.get_data("http://example.com") == {"id": 1}
 
+
+def test_placeholder():
+    pass
