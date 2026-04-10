@@ -91,16 +91,16 @@ Rules:
 - No blank lines
 - Return only code for missing functions
 - 
-Use ONLY valid imports based on this structure. {repo_structure}
-     Replace the import with EXACTLY this block:
-
-    import sys
-    import os
-    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '.')))
+- External imports must be returned exactly as they appear.
+- Project imports must NOT be returned; use the provided header instead.
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '.')))
     
-    Then import all filenames under src folder
-    
-    Do NOT invent modules.
+- Then import all filenames under src folder
+- Do not guess or invent imports.
+- Do not include comments or explanations in the output.
+-Do NOT invent modules.
     
 """
     resp = client.chat.completions.create(
@@ -315,6 +315,18 @@ def generate_tests_file(code, filename, error=None, coverage_feedback=None):
     Generate minimal pytest tests for {filename}.
     No comments, no blank lines, no placeholders.
     Ensure valid Python.
+Rules:
+
+- External imports must be returned exactly as they appear.
+- Project imports must NOT be returned; use the provided header instead.
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '.')))
+    
+- Then import all filenames under src folder
+- Do not guess or invent imports.
+- Do not include comments or explanations in the output.
+
     Here is the repository structure:
     {repo_structure}
     
