@@ -309,23 +309,22 @@ def generate_tests_file(code, filename, error=None, coverage_feedback=None):
     
     prompt = f"""
     Generate minimal pytest tests for {filename}.
-  
-
     Ensure valid Python.
 Rules:
   - No comments, no explanations, no extra text.
 - External imports must be returned exactly as they appear.
-- For Project imports use the provided header instead.
-import sys
-import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
+- For Project imports use only the provided header instead.
+    import sys
+    import os
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
     
-- Then import {source_name}
+- Include import {source_name}
+- Do not include any other Project imports
 - Do not guess or invent imports.
 - Do not include comments or explanations in the output.
-- - Do NOT guess filenames; use only the filenames provided to you.
+- Do NOT guess filenames; use only the filenames provided to you.
 
-    Do NOT invent modules.
+- Do NOT invent modules.
     Source code:
     {code}
     """
