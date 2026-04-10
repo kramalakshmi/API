@@ -41,7 +41,26 @@ Just clean, minimal test code.
     )
 
     return response.choices[0].message.content
-    
+
+def get_import_statements(code: str):
+    tree = ast.parse(code)
+    imports = []
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                imports.append(f"import {alias.name}" + (f" as {alias.asname}" if alias.asname else ""))
+        elif isinstance(node, ast.ImportFrom):
+            module = node.module or ""
+            names = ", ".join(
+                alias.name + (f" as {alias.asname}" if alias.asname else "")
+                for alias in node.names
+            )
+            imports.append(f"from {module} import {names}")
+
+    return imports
+
+
 def get_function_names(source_code):
     tree = ast.parse(source_code)
     return [
@@ -154,6 +173,8 @@ def get_missing_functions(source_path, coverage_file):
     return missing
     
 def append_tests(test_file, new_tests):
+
+    
     with open(test_file, "a") as f:
         f.write("\n" + new_tests + "\n")
 
@@ -195,8 +216,10 @@ def incremental_test_generation(source_file):
 
     new_tests = generate_tests_for_missing_functions(source_code, missing_funcs)
     print(new_tests)
-    
-    append_tests(test_file, new_tests)
+    #print(get_import_statements(new_tests))
+    content = test_code + "\n" + new_tests + "\n"
+    commit_file(test_file, content)
+    #append_tests(test_file, new_tests)
 
     print("New tests added.")
 
