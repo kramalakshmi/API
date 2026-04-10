@@ -54,3 +54,37 @@ import pytest
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
+
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
+import pytest
+import requests
+from unittest.mock import Mock
+import app
+def test_get_data_returns_json(monkeypatch):
+    response = Mock()
+    response.json.return_value = {"id": 1}
+    get_mock = Mock(return_value=response)
+    monkeypatch.setattr(requests, "get", get_mock)
+    result = app.get_data("http://example.com")
+    get_mock.assert_called_once_with("http://example.com")
+    assert result == {"id": 1}
+def test_post_data_returns_json(monkeypatch):
+    response = Mock()
+    response.json.return_value = {"success": True}
+    post_mock = Mock(return_value=response)
+    monkeypatch.setattr(requests, "post", post_mock)
+    payload = {"title": "Test"}
+    result = app.post_data("http://example.com", payload)
+    post_mock.assert_called_once_with("http://example.com", json=payload)
+    assert result == {"success": True}
+def test_put_data_returns_json(monkeypatch):
+    response = Mock()
+    response.json.return_value = {"updated": True}
+    put_mock = Mock(return_value=response)
+    monkeypatch.setattr(requests, "put", put_mock)
+    payload = {"title": "Updated"}
+    result = app.put_data("http://example.com/1", payload)
+    put_mock.assert_called_once_with("http://example.com/1", json=payload)
+    assert result == {"updated": True}
