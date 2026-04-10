@@ -5,28 +5,69 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 's
 import requests
 import RequestAPI
 
-class MockResponse:
-    def __init__(self, data):
-        self._data = data
-
-    def json(self):
-        return self._data
-
 def test_get_data(monkeypatch):
+    class MockResponse:
+        def json(self):
+            return {"id": 1}
+
     def mock_get(url):
-        return MockResponse({"id": 1})
+        return MockResponse()
+
     monkeypatch.setattr(requests, "get", mock_get)
     assert RequestAPI.get_data("http://example.com") == {"id": 1}
 
+
 def test_post_data(monkeypatch):
+    class MockResponse:
+        def json(self):
+            return {"result": "posted"}
+
     def mock_post(url, json):
-        return MockResponse({"title": json["title"]})
-    monkeypatch.setattr(requests, "post", mock_post)
-    assert RequestAPI.post_data("http://example.com", {"title": "Test"}) == {"title": "Test"}
+        assert url == "https://example.com"
+        assert json == {"title": "Test"}
+        return MockResponse()
+
+    monkeypatch.setattr(RequestAPI.requests, "post", mock_post)
+    assert RequestAPI.post_data("https://example.com", {"title": "Test"}) == {"result": "posted"}
+
 
 def test_put_data(monkeypatch):
+    class MockResponse:
+        def json(self):
+            return {"result": "updated"}
+
     def mock_put(url, json):
-        return MockResponse({"title": json["title"]})
-    monkeypatch.setattr(requests, "put", mock_put)
-    assert RequestAPI.put_data("http://example.com", {"title": "Updated"}) == {"title": "Updated"}
+        assert url == "https://example.com/1"
+        assert json == {"title": "Updated"}
+        return MockResponse()
+
+    monkeypatch.setattr(RequestAPI.requests, "put", mock_put)
+    assert RequestAPI.put_data("https://example.com/1", {"title": "Updated"}) == {"result": "updated"}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
