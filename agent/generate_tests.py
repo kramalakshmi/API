@@ -10,6 +10,15 @@ import tempfile
 import re
 from coverage import Coverage
 
+repo_structure = """
+        project/
+            src/
+                __init__.py
+                RequestAPI.py
+            tests/
+                test_RequestAPI.py
+        """
+
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 MODEL = "gpt-5.4"
@@ -81,6 +90,18 @@ Rules:
 - No comments
 - No blank lines
 - Return only code for missing functions
+- 
+Use ONLY valid imports based on this structure. {repo_structure}
+     Replace the import with EXACTLY this block:
+
+    import sys
+    import os
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '.')))
+    
+    Then import all filenames under src folder
+    
+    Do NOT invent modules.
+    
 """
     resp = client.chat.completions.create(
         model=MODEL,
@@ -172,11 +193,6 @@ def get_missing_functions(source_path, coverage_file):
 
     return missing
     
-def append_tests(test_file, new_tests):
-
-    
-    with open(test_file, "a") as f:
-        f.write("\n" + new_tests + "\n")
 
 
 def incremental_test_generation(source_file):
@@ -219,7 +235,7 @@ def incremental_test_generation(source_file):
     #print(get_import_statements(new_tests))
     content = test_code + "\n" + new_tests + "\n"
     commit_file(test_file, content)
-    #append_tests(test_file, new_tests)
+    
 
     print("New tests added.")
 
@@ -293,15 +309,7 @@ def write_to_github(path, message, content, branch="main"):
         print(f"File '{path}' created successfully.")
 
 def generate_tests_file(code, filename, error=None, coverage_feedback=None):
-    repo_structure = """
-        project/
-            src/
-                __init__.py
-                RequestAPI.py
-            tests/
-                test_RequestAPI.py
-        """
-
+    
     
     prompt = f"""
     Generate minimal pytest tests for {filename}.
@@ -317,10 +325,8 @@ def generate_tests_file(code, filename, error=None, coverage_feedback=None):
     import os
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '.')))
     
-
-
     Then import all filenames under src folder
-    Do NOT use 'import src.RequestAPI'.
+    
     Do NOT invent modules.
     Source code:
     {code}
