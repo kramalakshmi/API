@@ -24,5 +24,3 @@ def test_normalize_zero_total():
 def test_compute_distance():
     assert sample_app.compute_distance(0, 0, 3, 4) == 5.0
 
-
-
