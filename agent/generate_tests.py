@@ -101,6 +101,7 @@ def run_coverage_for_module(module_name, cwd):
     return result.stdout + "\n" + result.stderr
     
 def get_uncovered_functions(coverage_output):
+    print(coverage_output)
     missing_line = None
     for line in coverage_output.splitlines():
         if "Missing" in line:
@@ -109,7 +110,7 @@ def get_uncovered_functions(coverage_output):
 
     if not missing_line:
         return []
-
+    print("missing_line "+missing_line)
     # Example: "Missing: func_a:5, func_c:12"
     parts = missing_line.split("Missing")[-1].strip(": ").split(",")
     funcs = {p.split(":")[0].strip() for p in parts}
