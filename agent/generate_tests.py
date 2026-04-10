@@ -326,11 +326,6 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '.')))
 - Do not include comments or explanations in the output.
 - - Do NOT guess filenames; use only the filenames provided to you.
 
-    Here is the repository structure:
-    {repo_structure}
-    
-    
-    
     Do NOT invent modules.
     Source code:
     {code}
