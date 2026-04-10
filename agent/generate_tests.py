@@ -54,7 +54,7 @@ def get_function_names(source_code):
         if isinstance(node, ast.FunctionDef)
     ]
 
-def generate_tests_for_missing_functions(source_code, missing_funcs):
+def generate_tests_for_missing_functions(source_code, missing_funcs,source_name):
     prompt = f"""
 You are analyzing coverage results for a Python module.
 
@@ -82,14 +82,14 @@ Rules:
 5. Output ONLY pytest test functions for the missing real functions.
 
 Inputs:
-- Missing items: {{missing_funcs}}
-- Source code: {{source_code}}
+- Missing items: {missing_funcs}
+- Source code: {source_code}
 - Import header to use at the top of the test file:
 
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
-import RequestAPI
+- Include import {source_name}
 
 Your task:
 - Identify which missing items correspond to real functions.
@@ -243,7 +243,7 @@ def incremental_test_generation(source_file):
 
         print("Missing coverage for:", missing_funcs)
 
-        new_tests = generate_tests_for_missing_functions(source_code, missing_funcs)
+        new_tests = generate_tests_for_missing_functions(source_code, missing_funcs,module_name)
         print(new_tests)
         #print(get_import_statements(new_tests))
         content = test_code + "\n" + new_tests + "\n"
@@ -491,7 +491,7 @@ def refine_until_strong(file_path, max_attempts=5):
                     return
                 else:
                     print("Missing coverage for:", missing_funcs)
-                    new_tests = generate_tests_for_missing_functions(source_code, missing_funcs)
+                    new_tests = generate_tests_for_missing_functions(source_code, missing_funcs,Path(filename).stem)
                     print(new_tests)
                     #print(get_import_statements(new_tests))
                     content = test_code + "\n" + new_tests + "\n"
