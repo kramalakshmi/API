@@ -95,13 +95,6 @@ def run_coverage_for_module(module_name, cwd):
     )
 
 
-    result = subprocess.run(
-            ["pytest", "--maxfail=1", "--disable-warnings", "-q",
-             "--cov", filename, "--cov-report=term-missing"],
-            cwd=tmp,
-            capture_output=True,
-            text=True
-        )
 
     
     print(str(result.stdout) + "\n" + str(result.stderr))
@@ -150,7 +143,7 @@ def incremental_test_generation(source_file):
     module_name = os.path.splitext(os.path.basename(source_file))[0]
     print(os.path.basename(source_file))
     print(module_name )
-    cov_output = run_coverage_for_module(module_name, cwd=".")
+    cov_output = run_coverage_for_module(module_name, cwd="../tests")
 
     missing_funcs = get_uncovered_functions(cov_output)
 
