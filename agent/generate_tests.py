@@ -8,7 +8,7 @@ import ast
 import subprocess
 import tempfile
 import re
-
+from coverage import Coverage
 
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -100,7 +100,7 @@ def run_coverage_for_module(module_name, cwd):
     print(str(result.stdout) + "\n" + str(result.stderr))
     return result.stdout + "\n" + result.stderr
     
-def get_uncovered_functions(coverage_output):
+def get_uncovered_functions(coverage_output,source_file,tmp):
     #print(coverage_output)
     missing_line = None
     
@@ -110,21 +110,53 @@ def get_uncovered_functions(coverage_output):
         if "%" in current_line:
             missing_line = current_line
             break
-    '''
-    
-    for line in coverage_output.splitlines():
-        if "%" in line:
-            missing_line = line
-            break
-    '''
+   
     if not missing_line:
         return []
     print("missing_line "+missing_line)
     # Example: "Missing: func_a:5, func_c:12"
+    print(tmp)
+    missing = get_missing_functions(
+    source_path=os.path.join(tmp, source_file),
+    coverage_file=os.path.join(tmp, ".coverage")
+    )
+    
+    print("Missing:", ", ".join(missing))
+
+
     parts = missing_line.split("Missing")[-1].strip(": ").split(",")
     funcs = {p.split(":")[0].strip() for p in parts}
     return list(funcs)
 
+
+
+
+def get_missing_functions(source_path, coverage_file):
+    cov = Coverage(data_file=coverage_file)
+    cov.load()
+
+    analysis = cov.analysis2(source_path)
+    missing_lines = analysis[3]  # list of missing line numbers
+
+    with open(source_path) as f:
+        tree = ast.parse(f.read())
+
+    # Map line numbers → function names
+    func_map = {}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.FunctionDef):
+            for lineno in range(node.lineno, node.end_lineno + 1):
+                func_map[lineno] = node.name
+
+    # Build output
+    missing = []
+    for line in missing_lines:
+        func = func_map.get(line, None)
+        if func:
+            missing.append(f"{func}:{line}")
+
+    return missing
+    
 def append_tests(test_file, new_tests):
     with open(test_file, "a") as f:
         f.write("\n" + new_tests + "\n")
@@ -155,8 +187,8 @@ def incremental_test_generation(source_file):
     print(module_name )
     #cov_output = run_coverage_for_module(module_name, cwd=os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
     test_code = Path(test_file).read_text()
-    cov_output= run_pytest_and_collect_feedback(test_code, source_file)
-    missing_funcs = get_uncovered_functions(cov_output)
+    cov_output, tmp= run_pytest_and_collect_feedback(test_code, source_file)
+    missing_funcs = get_uncovered_functions(cov_output,os.path.basename(source_file),tmp)
 
     if not missing_funcs:
         print("All functions already covered.")
@@ -342,8 +374,8 @@ def run_pytest_and_collect_feedback(test_code, source_file):
         )
         '''
         print( "Coverage generated "+str(result.stdout) + "\n" + str(result.stderr))
-
-        return result.stdout + "\n" + result.stderr
+        
+        return result.stdout + "\n" + result.stderr , tmp
 
 
 def refine_until_strong(file_path, max_attempts=5):
