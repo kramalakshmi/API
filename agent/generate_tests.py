@@ -206,7 +206,7 @@ def incremental_test_generation(source_file):
     if not test_file:
         print("No test file found. Generating full test suite.")
         test_code = refine_until_strong(source_file)
-        test_file = test_dir / f"test_{Path(source_file).stem}.py"
+        test_file = Path("tests") / f"test_{Path(source_file).stem}.py"
         commit_file(str(test_file), test_code)
         
     # Test file exists → run coverage
