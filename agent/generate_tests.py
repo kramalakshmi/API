@@ -350,8 +350,8 @@ def run_pytest_and_collect_feedback(test_code, source_file,flag):
     print("Running pytest and collecting feedback")
     print ("Code generated" )
     with tempfile.TemporaryDirectory() as tmp:
-        test_path = f"{tmp}/tests/"
-        src_path = f"{tmp}/src/"
+        test_path = f"{tmp}/tests"
+        src_path = f"{tmp}/src"
             
         Path(test_path).mkdir(exist_ok=True)
         Path(src_path).mkdir(exist_ok=True)
