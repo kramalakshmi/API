@@ -376,7 +376,7 @@ def run_pytest_and_collect_feedback(test_code, source_file,flag):
         print( "Coverage generated "+str(result.stdout) + "\n" + str(result.stderr))
         cov_output= result.stdout + "\n" + result.stderr
         
-        if flag = 0:
+        if flag == 0:
             missing_funcs = get_uncovered_functions(cov_output,os.path.basename(source_file),tmp)
             return missing_funcs
         else:
@@ -401,7 +401,7 @@ def refine_until_strong(file_path, max_attempts=5):
             continue
 
         # 2. Run pytest + coverage
-        feedback = run_pytest_and_collect_feedback(test_code, filename)
+        feedback = run_pytest_and_collect_feedback(test_code, filename,1)
 
         print("Feedback after pytest "+str(feedback))
 
