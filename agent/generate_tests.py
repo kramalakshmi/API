@@ -206,35 +206,34 @@ def incremental_test_generation(source_file):
     if not test_file:
         print("No test file found. Generating full test suite.")
         test_code = refine_until_strong(source_file)
-        test_file = Path("tests") / f"test_{Path(source_file).stem}.py"
-        commit_file(str(test_file), test_code)
-        
+        test_file_name = Path("tests") / f"test_{Path(source_file).stem}.py"
+        commit_file(str(test_file_name), test_code)
+
     # Test file exists → run coverage
-    print("Test file exists. Running coverage... for "+test_file)
-    module_name = os.path.splitext(os.path.basename(source_file))[0]
-    print(os.path.basename(source_file))
-    print(module_name )
-    #cov_output = run_coverage_for_module(module_name, cwd=os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-    test_code = Path(test_file).read_text()
-    #cov_output= run_pytest_and_collect_feedback(test_code, source_file)
-    missing_funcs= run_pytest_and_collect_feedback(test_code, source_file,0)
-    #missing_funcs = get_uncovered_functions(cov_output,os.path.basename(source_file),tmp)
+    else:
+        print("Test file exists. Running coverage... for "+test_file)
+        module_name = os.path.splitext(os.path.basename(source_file))[0]
+        print(os.path.basename(source_file))
+        print(module_name )
+        #cov_output = run_coverage_for_module(module_name, cwd=os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+        test_code = Path(test_file).read_text()
+        #cov_output= run_pytest_and_collect_feedback(test_code, source_file)
+        missing_funcs= run_pytest_and_collect_feedback(test_code, source_file,0)
+        #missing_funcs = get_uncovered_functions(cov_output,os.path.basename(source_file),tmp)
 
-    if not missing_funcs:
-        print("All functions already covered.")
-        return
+        if not missing_funcs:
+            print("All functions already covered.")
+            return
 
-    print("Missing coverage for:", missing_funcs)
+        print("Missing coverage for:", missing_funcs)
 
-    new_tests = generate_tests_for_missing_functions(source_code, missing_funcs)
-    print(new_tests)
-    #print(get_import_statements(new_tests))
-    content = test_code + "\n" + new_tests + "\n"
-    commit_file(test_file, content)
-    
-
-    print("New tests added.")
-
+        new_tests = generate_tests_for_missing_functions(source_code, missing_funcs)
+        print(new_tests)
+        #print(get_import_statements(new_tests))
+        content = test_code + "\n" + new_tests + "\n"
+        commit_file(test_file, content)
+        print("New tests added.")
+            
 def main():
     
     src_dir = Path("src")
