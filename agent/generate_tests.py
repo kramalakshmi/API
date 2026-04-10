@@ -501,7 +501,7 @@ def refine_until_strong(file_path, max_attempts=5):
                     print(new_tests)
                     #print(get_import_statements(new_tests))
                     content = test_code + "\n" + new_tests + "\n"
-                    test_file = str(Path("tests")) / f"test_{Path(filename).stem}.py"
+                    test_file = str(Path("tests")) +"/" + f"test_{Path(filename).stem}.py"
                     commit_file(test_file, content)
                     print("New tests added.")
                     attempt += 1
