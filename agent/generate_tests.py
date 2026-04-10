@@ -65,11 +65,11 @@ Rules:
 
 import sys
 import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '.')))
 import RequestAPI
 """
     resp = client.chat.completions.create(
-        model="gpt-4o-mini",
+        model=MODEL,
         messages=[{"role": "user", "content": prompt}]
     )
     return resp.choices[0].message.content
@@ -187,8 +187,8 @@ def incremental_test_generation(source_file):
     print(module_name )
     #cov_output = run_coverage_for_module(module_name, cwd=os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
     test_code = Path(test_file).read_text()
-    cov_output= run_pytest_and_collect_feedback(test_code, source_file)
-    missing_funcs= run_pytest_and_collect_feedback(test_code, source_file)
+    #cov_output= run_pytest_and_collect_feedback(test_code, source_file)
+    missing_funcs= run_pytest_and_collect_feedback(test_code, source_file,0)
     #missing_funcs = get_uncovered_functions(cov_output,os.path.basename(source_file),tmp)
 
     if not missing_funcs:
@@ -198,6 +198,7 @@ def incremental_test_generation(source_file):
     print("Missing coverage for:", missing_funcs)
 
     new_tests = generate_tests_for_missing_functions(source_code, missing_funcs)
+    print(new_tests)
     append_tests(test_file, new_tests)
 
     print("New tests added.")
@@ -320,7 +321,7 @@ def generate_tests_file(code, filename, error=None, coverage_feedback=None):
 
 
 
-def run_pytest_and_collect_feedback(test_code, source_file):
+def run_pytest_and_collect_feedback(test_code, source_file,flag):
     filename = str(Path(source_file).stem)
     print("Running pytest and collecting feedback")
     print ("Code generated" )
@@ -341,8 +342,6 @@ def run_pytest_and_collect_feedback(test_code, source_file):
             context = f.read()
             print(context)
 
-        
-        
         
         print("Sanity check import:")
         try:
@@ -376,8 +375,12 @@ def run_pytest_and_collect_feedback(test_code, source_file):
         '''
         print( "Coverage generated "+str(result.stdout) + "\n" + str(result.stderr))
         cov_output= result.stdout + "\n" + result.stderr
-        get_uncovered_functions(cov_output,os.path.basename(source_file),tmp)
-        return result.stdout + "\n" + result.stderr , tmp
+        
+        if flag = 0:
+            missing_funcs = get_uncovered_functions(cov_output,os.path.basename(source_file),tmp)
+            return missing_funcs
+        else:
+            return result.stdout + "\n" + result.stderr 
 
 
 def refine_until_strong(file_path, max_attempts=5):
