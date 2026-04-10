@@ -466,25 +466,31 @@ def refine_until_strong(file_path, max_attempts=5):
             continue
         print("No import error found.. MOving on")
         # 4. Coverage‑guided refinement
-        if coverage_percentage == 100:
-            print("No coverage missing .. MOving on")
-            return test_code
-        else:
-            if not missing_funcs:
-                print("All functions already covered.")
-                return
+        try:
+            if coverage_percentage == 100:
+                print("No coverage missing .. MOving on")
+                return test_code
             else:
-                print("Missing coverage for:", missing_funcs)
-                new_tests = generate_tests_for_missing_functions(source_code, missing_funcs)
-                print(new_tests)
-                #print(get_import_statements(new_tests))
-                content = test_code + "\n" + new_tests + "\n"
-                test_file = Path("tests") / f"test_{Path(filename).stem}.py"
-                commit_file(test_file, content)
-                print("New tests added.")
-                attempt += 1
-                print("Attempt "+str(attempt))
-                feedback, coverage_percentage, missing_funcs = run_pytest_and_collect_feedback(test_code, filename)
+                if not missing_funcs:
+                    print("All functions already covered.")
+                    return
+                else:
+                    print("Missing coverage for:", missing_funcs)
+                    new_tests = generate_tests_for_missing_functions(source_code, missing_funcs)
+                    print(new_tests)
+                    #print(get_import_statements(new_tests))
+                    content = test_code + "\n" + new_tests + "\n"
+                    test_file = Path("tests") / f"test_{Path(filename).stem}.py"
+                    commit_file(test_file, content)
+                    print("New tests added.")
+                    attempt += 1
+                    print("Attempt "+str(attempt))
+                    feedback, coverage_percentage, missing_funcs = run_pytest_and_collect_feedback(test_code, filename)
+        except Exception as e:
+            print("Error during coverage refinement:", e)
+            #test_code = generate_tests_file(source_code, filename, coverage_feedback=str(e))
+            #attempt += 1
+            #continue
         
         # 5. Runtime errors
         if "E   " in feedback:
