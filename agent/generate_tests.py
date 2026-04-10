@@ -26,30 +26,6 @@ TOKEN = os.getenv("PAT")
 auth = Auth.Token(TOKEN)
 
 
-def generate_tests_for_file(file_path):
-    code = Path(file_path).read_text()
-    
-    prompt = f"""
-    Generate pytest unit tests for the following Python code.
-    Use clear, deterministic test cases.
-    Return only the Python code. Do not include explanations,Do not include comments and Do not include docstrings
-    I want pytest tests without any extra lines, no chatter, no comments, no unnecessary whitespace, no print statements, no example usage.
-Just clean, minimal test code.
-
-
-    Code:
-    {code}
-    """
-
-    response = client.chat.completions.create(
-        model=MODEL,
-        messages=[
-            {"role": "system", "content": "You are an expert Python developer. Write only the code, no explanations ,  comments, or docstrings. I want pytest tests without any extra lines, no chatter, no comments, no unnecessary whitespace, no print statements, no example usage.Just clean, minimal test code."},
-        {"role": "user", "content": prompt}]
-            
-    )
-
-    return response.choices[0].message.content
 
 def get_import_statements(code: str):
     tree = ast.parse(code)
@@ -80,28 +56,46 @@ def get_function_names(source_code):
 
 def generate_tests_for_missing_functions(source_code, missing_funcs):
     prompt = f"""
-Generate pytest tests ONLY for these functions:
-{missing_funcs}
-
-Source code:
-{source_code}
+You are analyzing coverage results for a Python module.
 
 Rules:
-- No comments
-- No blank lines
-- Return only code for missing functions
-- 
-- External imports must be returned exactly as they appear.
-- Project imports must NOT be returned; use the provided header instead.
+
+1. Missing lines that map to "<module>" represent top‑level code such as:
+   - the `if __name__ == "__main__":` block
+   - print statements
+   - example usage
+   - any code outside functions
+
+2. You must NOT generate tests for "<module>" lines.
+   - Do NOT create tests for the main block.
+   - Do NOT import any module named "main" or "main_module".
+   - Do NOT attempt to execute or validate example usage code.
+
+3. Only generate tests for REAL functions:
+   - Functions with actual names (e.g., get_data, post_data, put_data)
+   - Ignore any missing lines belonging to "<module>"
+
+4. Never guess or invent imports.
+   - Use ONLY the provided import header for project modules.
+   - Do NOT import "main", "main_module", or anything related to the main block.
+
+5. Output ONLY pytest test functions for the missing real functions.
+
+Inputs:
+- Missing items: {{missing_funcs}}
+- Source code: {{source_code}}
+- Import header to use at the top of the test file:
+
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
-    
-- Then import all filenames under src folder
-- Do not guess or invent imports.
-- Do not include comments or explanations in the output.
--Do NOT invent modules.
-    
+import RequestAPI
+
+Your task:
+- Identify which missing items correspond to real functions.
+- Ignore all "<module>" entries.
+- Generate pytest tests ONLY for the real functions.
+- Do not include comments or explanations.
 """
     resp = client.chat.completions.create(
         model=MODEL,
