@@ -160,7 +160,12 @@ def get_uncovered_functions(coverage_output,source_file,tmp):
     missingList = ", ".join(missing)
 
     parts = missingList.split("Missing")[-1].strip(": ").split(",")
-    funcs = {p.split(":")[0].strip() for p in parts}
+    funcs = {
+    p.split(":")[0].strip()
+    for p in parts
+    if p.split(":")[0].strip() != "<module>"
+}
+
     print("List of functions "+str( list(funcs)))
     return list(funcs)
 
@@ -179,21 +184,36 @@ def get_missing_functions(source_path, coverage_file):
     with open(source_path) as f:
         tree = ast.parse(f.read())
 
-    # Map line numbers → function names
-    func_map = {}
-    for node in ast.walk(tree):
+    top_level = [node for node in tree.body]
+
+    regions  = []
+    for i, node in enumerate(top_level):
         if isinstance(node, ast.FunctionDef):
-            for lineno in range(node.lineno, node.end_lineno + 1):
-                func_map[lineno] = node.name
+            start = node.lineno
+            # end is just before the next top-level node, or large number
+            if i + 1 < len(top_level):
+                end = top_level[i + 1].lineno - 1
+            else:
+                end = 10**9
+            regions.append((node.name, start, end))
 
-    # Build output
-    missing = []
+    # Map line numbers → function names
+    result = []
     for line in missing_lines:
-        func = func_map.get(line, None)
-        if func:
-            missing.append(f"{func}:{line}")
+        func_name = None
+        for name, start, end in regions:
+            if start <= line <= end:
+                func_name = name
+                break
+        if func_name:
+            result.append(f"{func_name}:{line}")
+        else:
+            # line is not inside any function (e.g., main block)
+            result.append(f"<module>:{line}")
 
-    return missing
+    
+
+    return result
     
 
 
