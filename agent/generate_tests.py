@@ -143,8 +143,9 @@ def incremental_test_generation(source_file):
     module_name = os.path.splitext(os.path.basename(source_file))[0]
     print(os.path.basename(source_file))
     print(module_name )
-    cov_output = run_coverage_for_module(module_name, cwd=os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
+    #cov_output = run_coverage_for_module(module_name, cwd=os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+    test_code = Path(test_file).read_text()
+    cov_output= run_pytest_and_collect_feedback(test_code, source_file)
     missing_funcs = get_uncovered_functions(cov_output)
 
     if not missing_funcs:
