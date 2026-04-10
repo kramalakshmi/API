@@ -295,15 +295,15 @@ def commit_file(path, content):
         current_branch = repo.active_branch.name
         print(f"Current branch: {current_branch}")
         '''
-        existing = repo.get_contents(path,ref="multipleFiles")
+        existing = repo.get_contents(path,ref="e_commerce")
         print("Path "+ path)
         
         repo.update_file(
-            path, "Update generated tests", content, existing.sha, branch= "multipleFiles"
+            path, "Update generated tests", content, existing.sha, branch= "e_commerce"
         )
     except:
         repo.create_file(
-            path, "Add generated tests", content , branch= "multipleFiles"
+            path, "Add generated tests", content , branch= "e_commerce"
         )
 
 
@@ -389,19 +389,7 @@ def run_pytest_and_collect_feedback(test_code, source_file):
 
         
         print("Sanity check import:")
-        try:
-            import sys, os
-            print(os.listdir(tmp))
-            print(test_path)
-            print(src_path)
-            print(os.getcwd())
-            sys.path.append(os.getcwd())
-
-            sys.path.append(tmp)  # tmp is your TemporaryDirectory path
-            import RequestAPI
-            print("SUCCESS: RequestAPI imported")
-        except Exception as e:
-            print("FAILED:", e)
+        
 
         # Run pytest with coverage on the specific source file
         result = subprocess.run(
@@ -468,10 +456,7 @@ def refine_until_strong(file_path, max_attempts=5):
                     import os
                     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
                     
-                    import RequestAPI
-
-            
-                    Do NOT use 'import src.RequestAPI'.
+                    
                     Do NOT invent modules.
                     {feedback}
                     
