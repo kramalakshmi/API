@@ -61,12 +61,7 @@ Source code:
 Rules:
 - No comments
 - No blank lines
-- Use this import header:
-
-import sys
-import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '.')))
-import RequestAPI
+- Return only code for missing functions
 """
     resp = client.chat.completions.create(
         model=MODEL,
@@ -200,6 +195,7 @@ def incremental_test_generation(source_file):
 
     new_tests = generate_tests_for_missing_functions(source_code, missing_funcs)
     print(new_tests)
+    
     append_tests(test_file, new_tests)
 
     print("New tests added.")
