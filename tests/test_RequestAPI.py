@@ -42,3 +42,7 @@ def test_put_data(monkeypatch):
 
     monkeypatch.setattr(requests, "put", mock_put)
     assert RequestAPI.put_data("http://example.com", {"title": "Updated"}) == expected
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
+import pytest
