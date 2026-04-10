@@ -175,7 +175,7 @@ def get_missing_functions(source_path, coverage_file):
     missing_lines = analysis[3]  # list of missing line numbers
     print("Missing lines:", missing_lines)
 
-
+    print(str(source_path))
     with open(source_path) as f:
         tree = ast.parse(f.read())
 
