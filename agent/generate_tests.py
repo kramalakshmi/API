@@ -353,8 +353,8 @@ def run_pytest_and_collect_feedback(test_code, source_file,flag):
         test_path = f"{tmp}/tests/test_generated.py"
         src_path = f"{tmp}/src/{filename}.py"
             
-        test_path.mkdir(exist_ok=True)
-        src_path.mkdir(exist_ok=True)
+        Path(test_path).mkdir(exist_ok=True)
+        Path(src_path).mkdir(exist_ok=True)
             
         with open(test_path, "w") as f:
             f.write(test_code)
