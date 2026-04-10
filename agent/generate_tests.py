@@ -205,14 +205,10 @@ def incremental_test_generation(source_file):
     # If no test file exists → generate full test suite
     if not test_file:
         print("No test file found. Generating full test suite.")
-        '''
-        tests = generate_tests_for_missing_functions(source_code, funcs)
-        os.makedirs("tests", exist_ok=True)
-        test_file = f"tests/test_{os.path.basename(source_file)}"
-        with open(test_file, "w") as f:
-            f.write(tests)
-        return
-        '''
+        test_code = refine_until_strong(source_file)
+        test_file = test_dir / f"test_{Path(source_file).stem}.py"
+        commit_file(str(test_file), test_code)
+        
     # Test file exists → run coverage
     print("Test file exists. Running coverage... for "+test_file)
     module_name = os.path.splitext(os.path.basename(source_file))[0]
