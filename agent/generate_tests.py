@@ -101,15 +101,15 @@ def run_coverage_for_module(module_name, cwd):
     return result.stdout + "\n" + result.stderr
     
 def get_uncovered_functions(coverage_output):
-    print(coverage_output)
+    #print(coverage_output)
     missing_line = None
     
     lines = coverage_output.splitlines()
     for i in range(1,len(lines)):
         current_line = lines[i]
-        print(current_line)
         if "%" in current_line:
             missing_line = current_line
+            break
     '''
     
     for line in coverage_output.splitlines():
