@@ -95,7 +95,7 @@ Rules:
 - Project imports must NOT be returned; use the provided header instead.
 import sys
 import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
     
 - Then import all filenames under src folder
 - Do not guess or invent imports.
@@ -318,7 +318,7 @@ Rules:
 - For Project imports use the provided header instead.
 import sys
 import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
     
 - Then import {source_name}
 - Do not guess or invent imports.
@@ -451,8 +451,8 @@ def refine_until_strong(file_path, max_attempts=5):
             
                     import sys
                     import os
-                    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-                    print(os.path.abspath(os.path.join(os.path.dirname(__file__))
+                    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
+                    
                     import RequestAPI
 
             
