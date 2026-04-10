@@ -137,3 +137,74 @@ def test_placeholder():
     pass
 
 
+
+def test_get_request(monkeypatch):
+    class DummyResponse:
+        def __init__(self):
+            self.status_code = 200
+        def json(self):
+            return {"ok": True}
+
+    called = {}
+
+    def fake_get(url, headers=None, params=None):
+        called["url"] = url
+        called["headers"] = headers
+        called["params"] = params
+        return DummyResponse()
+
+    monkeypatch.setattr(RequestAPI.requests, "get", fake_get)
+    response = RequestAPI.get_data("https://example.com", headers={"A": "B"}, params={"q": 1})
+    assert response.status_code == 200
+    assert response.json() == {"ok": True}
+    assert called["url"] == "https://example.com"
+    assert called["headers"] == {"A": "B"}
+    assert called["params"] == {"q": 1}
+
+
+def test_post_request(monkeypatch):
+    class DummyResponse:
+        def __init__(self):
+            self.status_code = 201
+        def json(self):
+            return {"created": True}
+
+    called = {}
+
+    def fake_post(url, headers=None, json=None):
+        called["url"] = url
+        called["headers"] = headers
+        called["json"] = json
+        return DummyResponse()
+
+    monkeypatch.setattr(RequestAPI.requests, "post", fake_post)
+    response = RequestAPI.post_data("https://example.com", headers={"C": "D"}, data={"name": "x"})
+    assert response.status_code == 201
+    assert response.json() == {"created": True}
+    assert called["url"] == "https://example.com"
+    assert called["headers"] == {"C": "D"}
+    assert called["json"] == {"name": "x"}
+
+
+def test_put_request(monkeypatch):
+    class DummyResponse:
+        def __init__(self):
+            self.status_code = 200
+        def json(self):
+            return {"updated": True}
+
+    called = {}
+
+    def fake_put(url, headers=None, json=None):
+        called["url"] = url
+        called["headers"] = headers
+        called["json"] = json
+        return DummyResponse()
+
+    monkeypatch.setattr(RequestAPI.requests, "put", fake_put)
+    response = RequestAPI.put_data("https://example.com/1", headers={"E": "F"}, data={"name": "y"})
+    assert response.status_code == 200
+    assert response.json() == {"updated": True}
+    assert called["url"] == "https://example.com/1"
+    assert called["headers"] == {"E": "F"}
+    assert called["json"] == {"name": "y"}
