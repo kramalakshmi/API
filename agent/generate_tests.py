@@ -218,7 +218,7 @@ def incremental_test_generation(source_file):
         #cov_output = run_coverage_for_module(module_name, cwd=os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
         test_code = Path(test_file).read_text()
         #cov_output= run_pytest_and_collect_feedback(test_code, source_file)
-        missing_funcs= run_pytest_and_collect_feedback(test_code, source_file,0)
+        feedback, coverage_percentage, missing_funcs= run_pytest_and_collect_feedback(test_code, source_file)
         #missing_funcs = get_uncovered_functions(cov_output,os.path.basename(source_file),tmp)
 
         if not missing_funcs:
@@ -345,7 +345,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 
 
-def run_pytest_and_collect_feedback(test_code, source_file,flag):
+def run_pytest_and_collect_feedback(test_code, source_file):
     filename = str(Path(source_file).stem)
     print("Running pytest and collecting feedback")
     print ("Code generated" )
@@ -403,21 +403,26 @@ def run_pytest_and_collect_feedback(test_code, source_file,flag):
             text=True
         )
         '''
-        print( "Coverage generated "+str(result.stdout) + "\n" + str(result.stderr))
-        cov_output= result.stdout + "\n" + result.stderr
         
-        if flag == 0:
-            missing_funcs = get_uncovered_functions(cov_output,os.path.basename(source_file),tmp)
-            return missing_funcs
-        else:
-            return result.stdout + "\n" + result.stderr 
-
+        cov_output= result.stdout + "\n" + result.stderr
+        print( "Coverage generated "+ cov_output)
+        match = re.search(r"TOTAL\s+\d+\s+\d+\s+(\d+)%", cov_output)
+        covePer= int(match.group(1))
+        if match:
+            print("COverage percentage "+str(covePer ))
+            if covePer == 100:
+                return result.stdout + "\n" + result.stderr, covePer,[]
+            else:
+                missing_funcs = get_uncovered_functions(cov_output,os.path.basename(source_file),tmp)
+                return result.stdout + "\n" + result.stderr,covePer,missing_funcs
+            
+                 
 
 def refine_until_strong(file_path, max_attempts=5):
     
-    code = Path(file_path).read_text()
+    source_code = Path(file_path).read_text()
     filename = str(Path(file_path))
-    test_code = generate_tests_file(code, filename)
+    test_code = generate_tests_file(source_code, filename)
     attempt = 0
     print("Attempt "+str(attempt))
     while attempt < max_attempts:
@@ -426,19 +431,19 @@ def refine_until_strong(file_path, max_attempts=5):
             ast.parse(test_code)
             print("Parsed code")
         except SyntaxError as e:
-            test_code = generate_tests_file(code, filename, error=str(e))
+            test_code = generate_tests_file(source_code, filename, error=str(e))
             attempt += 1
             continue
 
         # 2. Run pytest + coverage
-        feedback = run_pytest_and_collect_feedback(test_code, filename,1)
+        feedback, coverage_percentage, missing_funcs = run_pytest_and_collect_feedback(test_code, filename)
 
         print("Feedback after pytest "+str(feedback))
 
         # 3. Auto‑fix import errors
         if "ImportError" in feedback or "ModuleNotFoundError" in feedback:
             print("Import error")
-            test_code = generate_tests_file(code, filename, coverage_feedback=f"""
+            test_code = generate_tests_file(source_code, filename, coverage_feedback=f"""
         
                     Fix the import errors shown below.
             
@@ -461,25 +466,30 @@ def refine_until_strong(file_path, max_attempts=5):
             continue
         print("No import error found.. MOving on")
         # 4. Coverage‑guided refinement
-        if "coverage" in feedback.lower() or "missing" in feedback.lower():
-            match = re.search(r"TOTAL\s+\d+\s+\d+\s+(\d+)%", feedback)
-            covePer= int(match.group(1))
-            if match:
-                print("COverage percentage "+str(covePer ))
-                if covePer >= 90:
-                    return test_code
-            
-
-            print("COverage missing feedback "+ str(feedback))
-            test_code = generate_tests_file(code, filename, coverage_feedback=feedback)
-            attempt += 1
-            print("Attempt "+str(attempt))
-            continue
-        print("No coverage missing .. MOving on")
+        if coverage_percentage == 100:
+            print("No coverage missing .. MOving on")
+            return test_code
+        else:
+            if not missing_funcs:
+                print("All functions already covered.")
+                return
+            else:
+                print("Missing coverage for:", missing_funcs)
+                new_tests = generate_tests_for_missing_functions(source_code, missing_funcs)
+                print(new_tests)
+                #print(get_import_statements(new_tests))
+                content = test_code + "\n" + new_tests + "\n"
+                test_file = Path("tests") / f"test_{Path(filename).stem}.py"
+                commit_file(test_file, content)
+                print("New tests added.")
+                attempt += 1
+                print("Attempt "+str(attempt))
+                feedback, coverage_percentage, missing_funcs = run_pytest_and_collect_feedback(test_code, filename)
+        
         # 5. Runtime errors
         if "E   " in feedback:
             print("Runtime errors found")
-            test_code = generate_tests_file(code, filename, coverage_feedback=feedback)
+            test_code = generate_tests_file(source_code, filename, coverage_feedback=feedback)
             attempt += 1
             continue
         # Stop if everything passed
