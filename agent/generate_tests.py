@@ -150,11 +150,9 @@ def get_uncovered_functions(coverage_output,source_file,tmp):
         return []
     print("missing_line "+missing_line)
     # Example: "Missing: func_a:5, func_c:12"
-    with open(os.path.join(tmp, ".coverage")) as f:
-        coverage_file = f.read()
-        print(coverage_file)
+    
     missing = get_missing_functions(
-    source_path=os.path.join(tmp, source_file),
+    source_path=os.path.join(tmp,"src", source_file),
     coverage_file=os.path.join(tmp, ".coverage")
     )
     
