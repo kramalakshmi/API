@@ -107,6 +107,7 @@ def get_uncovered_functions(coverage_output):
     lines = coverage_output.splitlines()
     for i in range(1,len(lines)):
         current_line = lines[i]
+        print(current_line)
         if "%" in current_line:
             missing_line = current_line
     '''
