@@ -1,6 +1,6 @@
-from src.cart import Cart
-from src.orders import create_order
-from src.products import list_products
+from cart import Cart
+from orders import create_order
+from products import list_products
 
 def run_demo():
     print("Available products:", list_products())
