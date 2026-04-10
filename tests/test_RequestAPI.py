@@ -30,3 +30,5 @@ def test_put_data(monkeypatch):
     monkeypatch.setattr(requests, "put", mock_put)
     assert RequestAPI.put_data("http://example.com", {"title": "Updated"}) == {"title": "Updated"}
 
+
+
