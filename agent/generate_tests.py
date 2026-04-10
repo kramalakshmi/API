@@ -389,7 +389,12 @@ def run_pytest_and_collect_feedback(test_code, source_file):
 
         
         print("Sanity check import:")
-        
+        for root, dirs, files in os.walk(tmp):
+            print("ROOT:", root)
+            print("DIRS:", dirs)
+            print("FILES:", files)
+            print("-" * 40)
+
 
         # Run pytest with coverage on the specific source file
         result = subprocess.run(
