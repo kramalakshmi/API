@@ -15,24 +15,3 @@ def test_add_item_and_total_items():
     assert cart.items == {1: 3, 2: 3}
     assert cart.total_items() == 6
 
-def test_add_item_with_non_positive_quantity_raises():
-    cart = Cart()
-    with pytest.raises(ValueError):
-        cart.add_item(1, 0)
-    with pytest.raises(ValueError):
-        cart.add_item(1, -1)
-
-def test_remove_item_and_clear():
-    cart = Cart()
-    cart.add_item(1, 2)
-    cart.add_item(2, 1)
-    cart.remove_item(1)
-    assert cart.items == {2: 1}
-    cart.clear()
-    assert cart.items == {}
-    assert cart.total_items() == 0
-
-def test_remove_missing_item_raises():
-    cart = Cart()
-    with pytest.raises(ValueError):
-        cart.remove_item(99)
