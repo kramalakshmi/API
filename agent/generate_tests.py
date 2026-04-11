@@ -332,15 +332,35 @@ Rules:
 - For Project imports use only the provided header instead.
     import sys
     import os
-    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..','src')))
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
     
-- Include import {source_name}
-- Do not include any other Project imports
-- Do not guess or invent imports.
+
+
 - Do not include comments or explanations in the output.
 - Do NOT guess filenames; use only the filenames provided to you.
 
 - Do NOT invent modules.
+
+IMPORT RULES (MANDATORY — DO NOT VIOLATE):
+
+1. All imports in test files MUST use the full module path:
+   from src.<module> import <symbol>
+
+2. NEVER use bare imports such as:
+   import cart
+   from cart import Cart
+   import src
+   import src.cart
+
+3. NEVER shorten or rewrite module paths.
+   The test must mirror the source code’s import path exactly.
+
+4. The only valid import pattern is:
+   from src.<module> import <symbol>
+
+5. If the source file imports from "src.cart", the test MUST import:
+   from src.cart import Cart
+
     Source code:
     {code}
     """
