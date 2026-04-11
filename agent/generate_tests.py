@@ -44,7 +44,7 @@ def copy_project_to_tmp(project_root, tmp_root):
         # Compute relative path from project root
         rel_path = os.path.relpath(root, project_root)
         dest_dir = os.path.join(tmp_root, rel_path)
-        if not dest_dir.startswith("."):
+        if not rel_path.startswith("."):
                 # Create destination directory
                 os.makedirs(dest_dir, exist_ok=True)
         
