@@ -9,6 +9,8 @@ import subprocess
 import tempfile
 import re
 from coverage import Coverage
+import shutil
+
 
 repo_structure = """
         project/
@@ -24,7 +26,37 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 MODEL = "gpt-5.4"
 TOKEN = os.getenv("PAT")
 auth = Auth.Token(TOKEN)
+AGENT_DIR = os.path.abspath(os.path.dirname(__file__))
+PROJECT_ROOT = os.path.abspath(os.path.join(AGENT_DIR, ".."))
+max_attempts=5
+'''
+SRC_DIR = os.path.join(PROJECT_ROOT, "src")
+TESTS_DIR = os.path.join(PROJECT_ROOT, "tests")
+TEST_FILE = os.path.join(TESTS_DIR, "test_generated.py")
+COV_FILE = os.path.join(PROJECT_ROOT, ".coverage")
+'''
 
+def copy_project_to_tmp(project_root, tmp_root):
+    """
+    Copies all .py files from project_root into tmp_root,
+    preserving folder structure.
+    """
+    for root, dirs, files in os.walk(project_root):
+        # Compute relative path from project root
+        rel_path = os.path.relpath(root, project_root)
+        dest_dir = os.path.join(tmp_root, rel_path)
+        if not rel_path.startswith("."):
+                # Create destination directory
+                os.makedirs(dest_dir, exist_ok=True)
+        
+                # Copy only .py files
+                for f in files:
+                    if f.endswith(".py"):
+                        src_file = os.path.join(root, f)
+                        dest_file = os.path.join(dest_dir, f)
+                        shutil.copy2(src_file, dest_file)
+
+    return tmp_root
 
 
 def get_import_statements(code: str):
@@ -88,7 +120,7 @@ Inputs:
 
 import sys
 import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..','src')))
 - Include import {source_name}
 
 Your task:
@@ -211,7 +243,7 @@ def get_missing_functions(source_path, coverage_file):
     
 
 
-def incremental_test_generation(source_file):
+def incremental_test_generation(source_file, tmp_root):
     with open(source_file) as f:
         source_code = f.read()
 
@@ -221,7 +253,7 @@ def incremental_test_generation(source_file):
     # If no test file exists → generate full test suite
     if not test_file:
         print("No test file found. Generating full test suite.")
-        test_code = refine_until_strong(source_file)
+        test_code = refine_until_strong(source_file, tmp_root)
         test_file_name = Path("tests") / f"test_{Path(source_file).stem}.py"
         commit_file(str(test_file_name), test_code)
 
@@ -231,10 +263,10 @@ def incremental_test_generation(source_file):
         module_name = os.path.splitext(os.path.basename(source_file))[0]
         print(os.path.basename(source_file))
         print(module_name )
-        #cov_output = run_coverage_for_module(module_name, cwd=os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+        
         test_code = Path(test_file).read_text()
-        #cov_output= run_pytest_and_collect_feedback(test_code, source_file)
-        feedback, coverage_percentage, missing_funcs= run_pytest_and_collect_feedback(test_code, source_file)
+        
+        feedback, coverage_percentage, missing_funcs= run_pytest_and_collect_feedback(test_code, source_file,tmp_root)
         
 
         if not missing_funcs:
@@ -249,24 +281,42 @@ def incremental_test_generation(source_file):
         content = test_code + "\n" + new_tests + "\n"
         commit_file(test_file, content)
         print("New tests added.")
+
+def create_persistent_tmp_dir():
+    # Create a temp directory that persists until YOU delete it
+    tmp_root = tempfile.mkdtemp(prefix="refine_")
+    print("TMP DIR:", tmp_root)
+    return tmp_root
+
+def cleanup_tmp_dir(tmp_root):
+    shutil.rmtree(tmp_root, ignore_errors=True)
+
             
 def main():
     
-    src_dir = Path("src")
-    test_dir = Path("tests")
-    test_dir.mkdir(exist_ok=True)
+    tmp_root = create_persistent_tmp_dir()
+    try:
+        test_path = f"{tmp_root}/tests"
+        src_path = f"{tmp_root}/src"
+            
+        Path(test_path).mkdir(exist_ok=True)
+        Path(src_path).mkdir(exist_ok=True)
 
-    for file in src_dir.glob("*.py"):
-        if not "___init__" in str(file): 
-            print(str(Path(file).stem))
-            incremental_test_generation(file)
-            '''
-            test_code = refine_until_strong(file)
-            
-            test_file = test_dir / f"test_{Path(file).stem}.py"
-            commit_file(str(test_file), test_code)
-            '''
-            
+        
+        copy_project_to_tmp(PROJECT_ROOT, tmp_root)
+
+        src_dir = Path("src")
+        test_dir = Path("tests")
+        test_dir.mkdir(exist_ok=True)
+
+        for file in src_dir.glob("*.py"):
+                if not "___init__" in str(file): 
+                        print(str(Path(file).stem))
+                        incremental_test_generation(file,tmp_root)
+
+    finally:
+        # Delete tmp directory at the end
+        cleanup_tmp_dir(tmp_root)
 
 
 def commit_file(path, content):
@@ -295,15 +345,15 @@ def commit_file(path, content):
         current_branch = repo.active_branch.name
         print(f"Current branch: {current_branch}")
         '''
-        existing = repo.get_contents(path,ref="GenAItestCase")
+        existing = repo.get_contents(path,ref="e_commerce")
         print("Path "+ path)
         
         repo.update_file(
-            path, "Update generated tests", content, existing.sha, branch= "GenAItestCase"
+            path, "Update generated tests", content, existing.sha, branch= "e_commerce"
         )
     except:
         repo.create_file(
-            path, "Add generated tests", content , branch= "GenAItestCase"
+            path, "Add generated tests", content , branch= "e_commerce"
         )
 
 
@@ -330,17 +380,40 @@ Rules:
   - No comments, no explanations, no extra text.
 - External imports must be returned exactly as they appear.
 - For Project imports use only the provided header instead.
-    import sys
-    import os
-    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
+import sys
+import os
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)   
+
     
-- Include import {source_name}
-- Do not include any other Project imports
-- Do not guess or invent imports.
+
+
 - Do not include comments or explanations in the output.
 - Do NOT guess filenames; use only the filenames provided to you.
 
 - Do NOT invent modules.
+
+IMPORT RULES (MANDATORY — DO NOT VIOLATE):
+
+1. All imports in test files MUST use the full module path:
+   from src.<module> import <symbol>
+
+2. NEVER use bare imports such as:
+   import cart
+   from cart import Cart
+   import src
+   import src.cart
+
+3. NEVER shorten or rewrite module paths.
+   The test must mirror the source code’s import path exactly.
+
+4. The only valid import pattern is:
+   from src.<module> import <symbol>
+
+5. If the source file imports from "src.cart", the test MUST import:
+   from src.cart import Cart
+
     Source code:
     {code}
     """
@@ -360,64 +433,42 @@ Rules:
 
 
 
-def run_pytest_and_collect_feedback(test_code, source_file):
-    filename = str(Path(source_file).stem)
-    print("Running pytest and collecting feedback")
-    print ("Code generated" )
-    with tempfile.TemporaryDirectory() as tmp:
+def run_pytest_and_collect_feedback(test_code, source_file,tmp):
+        filename = str(Path(source_file).stem)
+        print("Running pytest and collecting feedback")
+        print ("Code generated" )
+    
+        filename = str(Path(source_file).stem)
+        print("Running pytest and collecting feedback")
+        print ("Code generated" )
+        
         test_path = f"{tmp}/tests"
         src_path = f"{tmp}/src"
-            
-        Path(test_path).mkdir(exist_ok=True)
-        Path(src_path).mkdir(exist_ok=True)
-
+                
+                
         test_path = f"{test_path}/test_generated.py"
         src_path = f"{src_path}/{filename}.py"
-            
+                
         with open(test_path, "w") as f:
-            f.write(test_code)
-
-        with open(src_path, "w") as f:
-            code = Path(source_file).read_text()
-            f.write(code)
-
-        with open(test_path, "r") as f:
-            print("#######################   TESTING ccode ######################")
-            #print(test_path)
-            context = f.read()
-            print(context)
-
+                f.write(test_code)
         
         print("Sanity check import:")
-        try:
-            import sys, os
-            print(os.listdir(tmp))
-            print(test_path)
-            print(src_path)
-            print(os.getcwd())
-            sys.path.append(os.getcwd())
+        for root, dirs, files in os.walk(tmp):
+            print("ROOT:", root)
+            print("DIRS:", dirs)
+            print("FILES:", files)
+            print("-" * 40)
 
-            sys.path.append(tmp)  # tmp is your TemporaryDirectory path
-            import RequestAPI
-            print("SUCCESS: RequestAPI imported")
-        except Exception as e:
-            print("FAILED:", e)
 
         # Run pytest with coverage on the specific source file
         result = subprocess.run(
             ["pytest", "--maxfail=1", "--disable-warnings", "-q",
-             "--cov", filename, "--cov-report=term-missing"],
+             "--cov=src", "--cov-report=term-missing"],
             cwd=tmp,
             capture_output=True,
             text=True
         )
 
-        '''
-        result = subprocess.run(["pytest", "--maxfail=1", "--disable-warnings", "-q", "--cov", src_path],
-            capture_output=True,
-            text=True
-        )
-        '''
         
         cov_output= result.stdout + "\n" + result.stderr
         print( "Coverage generated "+ cov_output)
@@ -433,7 +484,7 @@ def run_pytest_and_collect_feedback(test_code, source_file):
             
                  
 
-def refine_until_strong(file_path, max_attempts=5):
+def refine_until_strong(file_path, tmp):
     
     source_code = Path(file_path).read_text()
     filename = str(Path(file_path))
@@ -451,7 +502,7 @@ def refine_until_strong(file_path, max_attempts=5):
             continue
 
         # 2. Run pytest + coverage
-        feedback, coverage_percentage, missing_funcs = run_pytest_and_collect_feedback(test_code, filename)
+        feedback, coverage_percentage, missing_funcs = run_pytest_and_collect_feedback(test_code, filename,tmp)
 
         print("Feedback after pytest "+str(feedback))
 
@@ -466,12 +517,9 @@ def refine_until_strong(file_path, max_attempts=5):
             
                     import sys
                     import os
-                    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
+                    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..','src')))
                     
-                    import RequestAPI
-
-            
-                    Do NOT use 'import src.RequestAPI'.
+                    
                     Do NOT invent modules.
                     {feedback}
                     
@@ -500,7 +548,7 @@ def refine_until_strong(file_path, max_attempts=5):
                     print("New tests added.")
                     attempt += 1
                     print("Attempt "+str(attempt))
-                    feedback, coverage_percentage, missing_funcs = run_pytest_and_collect_feedback(test_code, filename)
+                    feedback, coverage_percentage, missing_funcs = run_pytest_and_collect_feedback(test_code, filename,tmp)
         except Exception as e:
             print("Error during coverage refinement:", e)
             #test_code = generate_tests_file(source_code, filename, coverage_feedback=str(e))
@@ -518,5 +566,7 @@ def refine_until_strong(file_path, max_attempts=5):
             return test_code
 
     raise RuntimeError("Failed to generate strong tests after refinement attempts")
+
 if __name__ == "__main__":
+    
     main()
