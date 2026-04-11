@@ -88,7 +88,7 @@ Inputs:
 
 import sys
 import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 - Include import {source_name}
 
 Your task:
@@ -332,7 +332,7 @@ Rules:
 - For Project imports use only the provided header instead.
     import sys
     import os
-    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
     
 - Include import {source_name}
 - Do not include any other Project imports
@@ -459,7 +459,7 @@ def refine_until_strong(file_path, max_attempts=5):
             
                     import sys
                     import os
-                    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
+                    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
                     
                     
                     Do NOT invent modules.
