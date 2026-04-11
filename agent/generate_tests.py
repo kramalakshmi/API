@@ -330,9 +330,12 @@ Rules:
   - No comments, no explanations, no extra text.
 - External imports must be returned exactly as they appear.
 - For Project imports use only the provided header instead.
-    import sys
-    import os
-    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+import sys
+import os
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+if PROJECT_ROOT not in sys.path:
+        sys.path.insert(0, PROJECT_ROOT)
+
     
 
 
