@@ -44,16 +44,16 @@ def copy_project_to_tmp(project_root, tmp_root):
         # Compute relative path from project root
         rel_path = os.path.relpath(root, project_root)
         dest_dir = os.path.join(tmp_root, rel_path)
-
-        # Create destination directory
-        os.makedirs(dest_dir, exist_ok=True)
-
-        # Copy only .py files
-        for f in files:
-            if f.endswith(".py"):
-                src_file = os.path.join(root, f)
-                dest_file = os.path.join(dest_dir, f)
-                shutil.copy2(src_file, dest_file)
+        if not dest_dir.startswith("."):
+                # Create destination directory
+                os.makedirs(dest_dir, exist_ok=True)
+        
+                # Copy only .py files
+                for f in files:
+                    if f.endswith(".py"):
+                        src_file = os.path.join(root, f)
+                        dest_file = os.path.join(dest_dir, f)
+                        shutil.copy2(src_file, dest_file)
 
     return tmp_root
 
