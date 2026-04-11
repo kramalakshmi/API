@@ -9,6 +9,8 @@ import subprocess
 import tempfile
 import re
 from coverage import Coverage
+import shutil
+
 
 repo_structure = """
         project/
@@ -24,7 +26,36 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 MODEL = "gpt-5.4"
 TOKEN = os.getenv("PAT")
 auth = Auth.Token(TOKEN)
+AGENT_DIR = os.path.abspath(os.path.dirname(__file__))
+PROJECT_ROOT = os.path.abspath(os.path.join(AGENT_DIR, ".."))
+'''
+SRC_DIR = os.path.join(PROJECT_ROOT, "src")
+TESTS_DIR = os.path.join(PROJECT_ROOT, "tests")
+TEST_FILE = os.path.join(TESTS_DIR, "test_generated.py")
+COV_FILE = os.path.join(PROJECT_ROOT, ".coverage")
+'''
 
+def copy_project_to_tmp(project_root, tmp_root):
+    """
+    Copies all .py files from project_root into tmp_root,
+    preserving folder structure.
+    """
+    for root, dirs, files in os.walk(project_root):
+        # Compute relative path from project root
+        rel_path = os.path.relpath(root, project_root)
+        dest_dir = os.path.join(tmp_root, rel_path)
+
+        # Create destination directory
+        os.makedirs(dest_dir, exist_ok=True)
+
+        # Copy only .py files
+        for f in files:
+            if f.endswith(".py"):
+                src_file = os.path.join(root, f)
+                dest_file = os.path.join(dest_dir, f)
+                shutil.copy2(src_file, dest_file)
+
+    return tmp_root
 
 
 def get_import_statements(code: str):
@@ -400,10 +431,12 @@ def run_pytest_and_collect_feedback(test_code, source_file):
         with open(test_path, "w") as f:
             f.write(test_code)
 
+        copy_project_to_tmp(PROJECT_ROOT, tmp)
+        '''
         with open(src_path, "w") as f:
             code = Path(source_file).read_text()
             f.write(code)
-
+        '''
         with open(test_path, "r") as f:
             print("#######################   TESTING ccode ######################")
             #print(test_path)
