@@ -32,3 +32,42 @@ def test_create_order(monkeypatch):
 def test_create_order_empty_cart():
     with pytest.raises(ValueError):
         create_order({})
+```python
+def test_calculate_order_total(monkeypatch):
+    import orders
+
+    def fake_get_product(product_id):
+        products = {
+            "p1": {"price": 10.0},
+            "p2": {"price": 5.5},
+        }
+        return products[product_id]
+
+    monkeypatch.setattr(orders, "get_product", fake_get_product)
+
+    cart_items = {"p1": 2, "p2": 3}
+    assert orders.calculate_order_total(cart_items) == 36.5
+
+
+def test_create_order_raises_for_empty_cart():
+    import orders
+    import pytest
+
+    with pytest.raises(ValueError, match="Cannot create order with empty cart"):
+        orders.create_order({})
+
+
+def test_create_order_returns_created_order(monkeypatch):
+    import orders
+
+    monkeypatch.setattr(orders, "calculate_order_total", lambda cart_items: 42.0)
+
+    cart_items = {"p1": 1, "p2": 2}
+    result = orders.create_order(cart_items)
+
+    assert result == {
+        "items": cart_items,
+        "total": 42.0,
+        "status": "CREATED"
+    }
+```
