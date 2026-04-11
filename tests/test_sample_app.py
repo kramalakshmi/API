@@ -2,227 +2,27 @@ import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
 
-import requests
-import RequestAPI
+import pytest
+import sample_app
 
-class MockResponse:
-    def __init__(self, data):
-        self._data = data
+def test_add():
+    assert sample_app.add(2, 3) == 5
 
-    def json(self):
-        return self._data
+def test_divide():
+    assert sample_app.divide(10, 2) == 5
 
-def test_get_data(monkeypatch):
-    def mock_get(url):
-        return MockResponse({"id": 1})
-    monkeypatch.setattr(requests, "get", mock_get)
-    assert RequestAPI.get_data("http://example.com") == {"id": 1}
+def test_divide_by_zero():
+    with pytest.raises(ValueError):
+        sample_app.divide(1, 0)
 
-def test_post_data(monkeypatch):
-    def mock_post(url, json):
-        return MockResponse({"title": json["title"]})
-    monkeypatch.setattr(requests, "post", mock_post)
-    assert RequestAPI.post_data("http://example.com", {"title": "Test"}) == {"title": "Test"}
+def test_normalize():
+    assert sample_app.normalize([1, 1, 2]) == [0.25, 0.25, 0.5]
 
-def test_put_data(monkeypatch):
-    def mock_put(url, json):
-        return MockResponse({"title": json["title"]})
-    monkeypatch.setattr(requests, "put", mock_put)
-    assert RequestAPI.put_data("http://example.com", {"title": "Updated"}) == {"title": "Updated"}
+def test_normalize_zero_total():
+    assert sample_app.normalize([0, 0, 0]) == [0, 0, 0]
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+def test_compute_distance():
+    assert sample_app.compute_distance(0, 0, 3, 4) == 5.0
 
 
 
