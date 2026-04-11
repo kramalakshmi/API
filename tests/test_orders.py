@@ -30,6 +30,3 @@ def test_create_order(monkeypatch):
     monkeypatch.setattr("src.orders.get_product", fake_get_product)
     result = create_order({5: 2})
     assert result == {"items": {5: 2}, "total": 6.0, "status": "CREATED"}
-import os
-import sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..','src')))
