@@ -128,6 +128,13 @@ Your task:
 - Ignore all "<module>" entries.
 - Generate pytest tests ONLY for the real functions.
 - Do not include comments or explanations.
+
+FORMAT RULES (MANDATORY):
+- Output MUST be valid Python ONLY.
+- NEVER include Markdown code fences.
+- NEVER include backticks.
+- NEVER include comments like "# ```python".
+
 """
     resp = client.chat.completions.create(
         model=MODEL,
@@ -413,6 +420,12 @@ IMPORT RULES (MANDATORY — DO NOT VIOLATE):
 
 5. If the source file imports from "src.cart", the test MUST import:
    from src.cart import Cart
+   
+FORMAT RULES (MANDATORY):
+- Output MUST be valid Python ONLY.
+- NEVER include Markdown code fences.
+- NEVER include backticks.
+- NEVER include comments like "# ```python".
 
     Source code:
     {code}
