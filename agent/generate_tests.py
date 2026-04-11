@@ -88,7 +88,7 @@ Inputs:
 
 import sys
 import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..','src')))
 - Include import {source_name}
 
 Your task:
@@ -231,7 +231,7 @@ def incremental_test_generation(source_file):
         module_name = os.path.splitext(os.path.basename(source_file))[0]
         print(os.path.basename(source_file))
         print(module_name )
-        #cov_output = run_coverage_for_module(module_name, cwd=os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+        #cov_output = run_coverage_for_module(module_name, cwd=os.path.abspath(os.path.join(os.path.dirname(__file__), '..','src')))
         test_code = Path(test_file).read_text()
         #cov_output= run_pytest_and_collect_feedback(test_code, source_file)
         feedback, coverage_percentage, missing_funcs= run_pytest_and_collect_feedback(test_code, source_file)
@@ -332,7 +332,7 @@ Rules:
 - For Project imports use only the provided header instead.
     import sys
     import os
-    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..','src')))
     
 - Include import {source_name}
 - Do not include any other Project imports
@@ -459,7 +459,7 @@ def refine_until_strong(file_path, max_attempts=5):
             
                     import sys
                     import os
-                    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+                    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..','src')))
                     
                     
                     Do NOT invent modules.
