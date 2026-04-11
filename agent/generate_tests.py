@@ -28,6 +28,7 @@ TOKEN = os.getenv("PAT")
 auth = Auth.Token(TOKEN)
 AGENT_DIR = os.path.abspath(os.path.dirname(__file__))
 PROJECT_ROOT = os.path.abspath(os.path.join(AGENT_DIR, ".."))
+max_attempts=5
 '''
 SRC_DIR = os.path.join(PROJECT_ROOT, "src")
 TESTS_DIR = os.path.join(PROJECT_ROOT, "tests")
@@ -242,7 +243,7 @@ def get_missing_functions(source_path, coverage_file):
     
 
 
-def incremental_test_generation(source_file):
+def incremental_test_generation(source_file, tmp_root):
     with open(source_file) as f:
         source_code = f.read()
 
@@ -252,7 +253,7 @@ def incremental_test_generation(source_file):
     # If no test file exists → generate full test suite
     if not test_file:
         print("No test file found. Generating full test suite.")
-        test_code = refine_until_strong(source_file)
+        test_code = refine_until_strong(source_file, tmp_root)
         test_file_name = Path("tests") / f"test_{Path(source_file).stem}.py"
         commit_file(str(test_file_name), test_code)
 
@@ -262,10 +263,10 @@ def incremental_test_generation(source_file):
         module_name = os.path.splitext(os.path.basename(source_file))[0]
         print(os.path.basename(source_file))
         print(module_name )
-        #cov_output = run_coverage_for_module(module_name, cwd=os.path.abspath(os.path.join(os.path.dirname(__file__), '..','src')))
+        
         test_code = Path(test_file).read_text()
-        #cov_output= run_pytest_and_collect_feedback(test_code, source_file)
-        feedback, coverage_percentage, missing_funcs= run_pytest_and_collect_feedback(test_code, source_file)
+        
+        feedback, coverage_percentage, missing_funcs= run_pytest_and_collect_feedback(test_code, source_file,tmp_root)
         
 
         if not missing_funcs:
@@ -280,24 +281,42 @@ def incremental_test_generation(source_file):
         content = test_code + "\n" + new_tests + "\n"
         commit_file(test_file, content)
         print("New tests added.")
+
+def create_persistent_tmp_dir():
+    # Create a temp directory that persists until YOU delete it
+    tmp_root = tempfile.mkdtemp(prefix="refine_")
+    print("TMP DIR:", tmp_root)
+    return tmp_root
+
+def cleanup_tmp_dir(tmp_root):
+    shutil.rmtree(tmp_root, ignore_errors=True)
+
             
 def main():
     
-    src_dir = Path("src")
-    test_dir = Path("tests")
-    test_dir.mkdir(exist_ok=True)
+    tmp_root = create_persistent_tmp_dir()
+    try:
+        test_path = f"{tmp_root}/tests"
+        src_path = f"{tmp_root}/src"
+            
+        Path(test_path).mkdir(exist_ok=True)
+        Path(src_path).mkdir(exist_ok=True)
 
-    for file in src_dir.glob("*.py"):
-        if not "___init__" in str(file): 
-            print(str(Path(file).stem))
-            incremental_test_generation(file)
-            '''
-            test_code = refine_until_strong(file)
-            
-            test_file = test_dir / f"test_{Path(file).stem}.py"
-            commit_file(str(test_file), test_code)
-            '''
-            
+        
+        copy_project_to_tmp(PROJECT_ROOT, tmp_root)
+
+        src_dir = Path("src")
+        test_dir = Path("tests")
+        test_dir.mkdir(exist_ok=True)
+
+        for file in src_dir.glob("*.py"):
+                if not "___init__" in str(file): 
+                        print(str(Path(file).stem))
+                        incremental_test_generation(file,tmp_root)
+
+    finally:
+        # Delete tmp directory at the end
+        cleanup_tmp_dir(tmp_root)
 
 
 def commit_file(path, content):
@@ -414,35 +433,24 @@ IMPORT RULES (MANDATORY — DO NOT VIOLATE):
 
 
 
-def run_pytest_and_collect_feedback(test_code, source_file):
-    filename = str(Path(source_file).stem)
-    print("Running pytest and collecting feedback")
-    print ("Code generated" )
-    with tempfile.TemporaryDirectory() as tmp:
+def run_pytest_and_collect_feedback(test_code, source_file,tmp):
+        filename = str(Path(source_file).stem)
+        print("Running pytest and collecting feedback")
+        print ("Code generated" )
+    
+        filename = str(Path(source_file).stem)
+        print("Running pytest and collecting feedback")
+        print ("Code generated" )
+        
         test_path = f"{tmp}/tests"
         src_path = f"{tmp}/src"
-            
-        Path(test_path).mkdir(exist_ok=True)
-        Path(src_path).mkdir(exist_ok=True)
-
+                
+                
         test_path = f"{test_path}/test_generated.py"
         src_path = f"{src_path}/{filename}.py"
-            
+                
         with open(test_path, "w") as f:
-            f.write(test_code)
-
-        copy_project_to_tmp(PROJECT_ROOT, tmp)
-        '''
-        with open(src_path, "w") as f:
-            code = Path(source_file).read_text()
-            f.write(code)
-        '''
-        with open(test_path, "r") as f:
-            print("#######################   TESTING ccode ######################")
-            #print(test_path)
-            context = f.read()
-            print(context)
-
+                f.write(test_code)
         
         print("Sanity check import:")
         for root, dirs, files in os.walk(tmp):
@@ -461,12 +469,6 @@ def run_pytest_and_collect_feedback(test_code, source_file):
             text=True
         )
 
-        '''
-        result = subprocess.run(["pytest", "--maxfail=1", "--disable-warnings", "-q", "--cov", src_path],
-            capture_output=True,
-            text=True
-        )
-        '''
         
         cov_output= result.stdout + "\n" + result.stderr
         print( "Coverage generated "+ cov_output)
@@ -482,7 +484,7 @@ def run_pytest_and_collect_feedback(test_code, source_file):
             
                  
 
-def refine_until_strong(file_path, max_attempts=5):
+def refine_until_strong(file_path, tmp):
     
     source_code = Path(file_path).read_text()
     filename = str(Path(file_path))
@@ -500,7 +502,7 @@ def refine_until_strong(file_path, max_attempts=5):
             continue
 
         # 2. Run pytest + coverage
-        feedback, coverage_percentage, missing_funcs = run_pytest_and_collect_feedback(test_code, filename)
+        feedback, coverage_percentage, missing_funcs = run_pytest_and_collect_feedback(test_code, filename,tmp)
 
         print("Feedback after pytest "+str(feedback))
 
@@ -546,7 +548,7 @@ def refine_until_strong(file_path, max_attempts=5):
                     print("New tests added.")
                     attempt += 1
                     print("Attempt "+str(attempt))
-                    feedback, coverage_percentage, missing_funcs = run_pytest_and_collect_feedback(test_code, filename)
+                    feedback, coverage_percentage, missing_funcs = run_pytest_and_collect_feedback(test_code, filename,tmp)
         except Exception as e:
             print("Error during coverage refinement:", e)
             #test_code = generate_tests_file(source_code, filename, coverage_feedback=str(e))
@@ -564,5 +566,7 @@ def refine_until_strong(file_path, max_attempts=5):
             return test_code
 
     raise RuntimeError("Failed to generate strong tests after refinement attempts")
+
 if __name__ == "__main__":
+    
     main()
