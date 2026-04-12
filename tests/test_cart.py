@@ -31,3 +31,7 @@ def test_remove_item_and_clear():
     cart.clear()
     assert cart.items == {}
     assert cart.total_items() == 0
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..','src')))
+import cart
