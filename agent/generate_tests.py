@@ -77,14 +77,14 @@ def write_test_file(tmp_root, module_name, content):
 
     try:
         
-        existing = repo.get_contents(test_file,ref="e_commerce")
+        existing = repo.get_contents(test_file,ref="multi_refinement")
         
         repo.update_file(
-            test_file, "Update generated tests", content, existing.sha, branch= "e_commerce"
+            test_file, "Update generated tests", content, existing.sha, branch= "multi_refinement"
         )
     except:
         repo.create_file(
-            test_file, "Add generated tests", content , branch= "e_commerce"
+            test_file, "Add generated tests", content , branch= "multi_refinement"
         )
 
     file_path = os.path.join(test_dir, f"test_{module_name}.py")
@@ -381,3 +381,7 @@ if PROJECT_ROOT not in sys.path:
 
 Now regenerate the full corrected test file for this module.
 """
+
+if __name__ == "__main__":
+    
+    refinement_loop()
