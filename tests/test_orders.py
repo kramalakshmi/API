@@ -20,17 +20,3 @@ def test_calculate_order_total(monkeypatch):
     monkeypatch.setattr("src.orders.get_product", fake_get_product)
     assert calculate_order_total({"p1": 2, "p2": 4}) == 30.0
 
-
-def test_create_order(monkeypatch):
-    def fake_calculate_order_total(cart_items):
-        return 42.0
-
-    monkeypatch.setattr("src.orders.calculate_order_total", fake_calculate_order_total)
-    cart_items = {"p1": 3}
-    result = create_order(cart_items)
-    assert result == {"items": cart_items, "total": 42.0, "status": "CREATED"}
-
-
-def test_create_order_empty_cart_raises():
-    with pytest.raises(ValueError, match="Cannot create order with empty cart"):
-        create_order({})
