@@ -196,18 +196,33 @@ def missing_functions_for_module(cov_json_path, module_name):
         # Function-level coverage info
         functions = file_data.get("functions", {})
 
+        # Extract function names + start lines
+        fn_list = []
         for fn_name, fn_info in functions.items():
-            start = fn_info.get("lineno")
-            end = fn_info.get("end_lineno")
+            start = fn_info.get("start_line") or fn_info.get("lineno")
+            if start is not None:
+                fn_list.append((fn_name, start))
 
-            if start is None or end is None:
-                continue
+        # Sort by start line
+        fn_list.sort(key=lambda x: x[1])
 
+        # Infer end lines
+        inferred = []
+        for i, (fn_name, start) in enumerate(fn_list):
+            if i < len(fn_list) - 1:
+                end = fn_list[i + 1][1] - 1
+            else:
+                end = start + 2000  # safe upper bound
+            inferred.append((fn_name, start, end))
+
+        # Check overlap with missing lines
+        for fn_name, start, end in inferred:
             fn_lines = set(range(start, end + 1))
-
-            # If any missing line overlaps this function → function is missing coverage
             if fn_lines & missing_lines:
                 missing_fns.append(fn_name)
+
+    
+
     print(f"Missing functions for module '{module_name}': {missing_fns}")
     return missing_fns
 
