@@ -205,7 +205,7 @@ def missing_functions_for_module(cov_json_path, module_name):
             # If any missing line overlaps this function → function is missing coverage
             if fn_lines & missing_lines:
                 missing_fns.append(fn_name)
-
+    print(f"Missing functions for module '{module_name}': {missing_fns}")
     return missing_fns
 
 def refinement_loop(tmp_root,project_root, llm, max_iter=5, min_cov=85):
