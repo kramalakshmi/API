@@ -548,7 +548,7 @@ def coverage_for_module(cov_json_path, module_name):
 import os
 import tempfile
 
-def refinement_loop(project_root: str, llm, max_iter: int = 10, min_cov: float = 85.0) -> bool:
+def refinement_loop(tmp_root,llm,project_root: str, max_iter: int = 10, min_cov: float = 85.0) -> bool:
     """
     Multi-module refinement loop:
     - Copies project to a temp dir
@@ -561,8 +561,7 @@ def refinement_loop(project_root: str, llm, max_iter: int = 10, min_cov: float =
     - On success, copies tests back to real project
     """
 
-    tmp_root = tempfile.mkdtemp(prefix="refine_")
-    copy_project_to_tmp(project_root, tmp_root)
+
 
     for iteration in range(1, max_iter + 1):
         print(f"\n===== ITERATION {iteration} =====")
@@ -1014,5 +1013,5 @@ Output ONLY the final test file.
 if __name__ == "__main__":
     tmp_root = tempfile.mkdtemp(prefix="refine_")
     
-    refinement_loop(tmp_root, PROJECT_ROOT, llm)
+    refinement_loop(tmp_root,llm, PROJECT_ROOT)
     copy_tests_from_tmp(tmp_root, PROJECT_ROOT)
