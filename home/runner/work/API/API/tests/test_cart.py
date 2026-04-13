@@ -14,14 +14,14 @@ def test_cart_initializes_empty():
     assert cart.total_items() == 0
 
 
-def test_add_item_default_quantity():
+def test_add_item_with_default_quantity():
     cart = Cart()
     cart.add_item(1)
     assert cart.items == {1: 1}
     assert cart.total_items() == 1
 
 
-def test_add_item_with_specific_quantity():
+def test_add_item_with_explicit_quantity():
     cart = Cart()
     cart.add_item(2, 3)
     assert cart.items == {2: 3}
@@ -36,11 +36,11 @@ def test_add_item_accumulates_quantity_for_same_product():
     assert cart.total_items() == 6
 
 
-def test_add_item_multiple_products_updates_total_items():
+def test_add_item_multiple_products_total_items():
     cart = Cart()
     cart.add_item(1, 2)
     cart.add_item(2, 3)
-    cart.add_item(3)
+    cart.add_item(3, 1)
     assert cart.items == {1: 2, 2: 3, 3: 1}
     assert cart.total_items() == 6
 
@@ -65,24 +65,25 @@ def test_remove_item_existing_product():
     assert cart.total_items() == 1
 
 
-def test_remove_item_raises_for_missing_product():
+def test_remove_item_raises_when_product_not_in_cart():
+    cart = Cart()
+    with pytest.raises(ValueError, match="Item not in cart"):
+        cart.remove_item(999)
+
+
+def test_remove_item_raises_for_missing_product_after_other_items_added():
     cart = Cart()
     cart.add_item(1, 2)
 
     with pytest.raises(ValueError, match="Item not in cart"):
-        cart.remove_item(99)
+        cart.remove_item(2)
 
     assert cart.items == {1: 2}
     assert cart.total_items() == 2
 
 
-def test_remove_item_raises_when_cart_empty():
+def test_total_items_empty_cart():
     cart = Cart()
-
-    with pytest.raises(ValueError, match="Item not in cart"):
-        cart.remove_item(1)
-
-    assert cart.items == {}
     assert cart.total_items() == 0
 
 
@@ -97,10 +98,8 @@ def test_clear_empties_cart():
     assert cart.total_items() == 0
 
 
-def test_clear_on_empty_cart_is_noop():
+def test_clear_on_empty_cart_is_safe():
     cart = Cart()
-
     cart.clear()
-
     assert cart.items == {}
     assert cart.total_items() == 0
