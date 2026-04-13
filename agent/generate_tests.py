@@ -11,6 +11,7 @@ import re
 from coverage import Coverage
 import shutil
 import json
+import textwrap
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 MODEL = "gpt-5.4"
@@ -21,6 +22,102 @@ PROJECT_ROOT = os.path.abspath(os.path.join(AGENT_DIR, ".."))
 max_attempts=5
 
 
+
+ERROR_PATTERNS = {
+    # 1. Syntax Errors
+    "syntax_error": [
+        r"SyntaxError",
+        r"unexpected EOF",
+        r"invalid syntax",
+        r"unterminated string",
+        r"indentation error",
+    ],
+
+    # 2. Import Errors
+    "import_error": [
+        r"ImportError",
+        r"ModuleNotFoundError",
+        r"cannot import name",
+        r"No module named",
+    ],
+
+    # 3. Wrong sys.path Manipulation
+    "sys_path_error": [
+        r"sys\.path",
+        r"ImportError: attempted relative import",
+    ],
+
+    # 4. Name Errors
+    "name_error": [
+        r"NameError",
+        r"is not defined",
+    ],
+
+    # 5. Wrong Function Signatures
+    "signature_mismatch": [
+        r"TypeError: .* takes .* arguments? .* given",
+        r"TypeError: missing .* required positional argument",
+        r"TypeError: .* got an unexpected keyword argument",
+    ],
+
+    # 6. Wrong Expected Values
+    "wrong_expected_value": [
+        r"AssertionError",
+        r"assert .* == .*",
+        r"Expected .* but got .*",
+    ],
+
+    # 7. Missing Exception Tests
+    "missing_exception_test": [
+        r"did not raise",
+        r"Expected .* to raise",
+    ],
+
+    # 8. Wrong Use of pytest Fixtures
+    "fixture_error": [
+        r"fixture .* not found",
+        r"fixture '.*' not found",
+        r"ScopeMismatch",
+    ],
+
+    # 9. Tests That Never Execute Source Code
+    "no_execution": [
+        r"collected 0 items",
+        r"no tests ran",
+    ],
+
+    # 10. Tests That Crash Before Running
+    "test_crash": [
+        r"ERROR at setup",
+        r"Failed: DID NOT RAISE",
+        r"AttributeError",
+    ],
+
+    # 11. Duplicate or Conflicting sys.path Logic
+    "duplicate_sys_path": [
+        r"sys\.path\.insert",
+        r"sys\.path\.append",
+    ],
+
+    # 12. Tests for Non‑Existent Files
+    "file_not_found": [
+        r"FileNotFoundError",
+        r"No such file or directory",
+    ],
+
+    # 13. Tests That Depend on Global State
+    "global_state_error": [
+        r"global variable",
+        r"stateful",
+        r"depends on global",
+    ],
+
+    # 14. Incorrect Testing of __main__
+    "main_block_error": [
+        r"__main__",
+        r"if __name__ ==",
+    ],
+}
 
 
 
@@ -135,8 +232,189 @@ def run_pytest(tmp):
         text=True
     )
     print("Pytest completed with return code:", result.stdout+" \n"+result.stderr+"\n "+str(result.returncode))
+    if result.returncode != 0:
+        print("Pytest failed. STDOUT:\n", result.stdout)
+        print("Pytest failed. STDERR:\n", result.stderr)
+        error_categories = classify_errors(result.stderr, result.stdout)
+
+
     return result.stdout, result.stderr, result.returncode
 
+
+
+import ast
+
+def extract_function_signatures(source: str) -> dict:
+    """
+    Extracts function signatures from module source code.
+    Returns:
+        { function_name: [arg1, arg2, ...] }
+    """
+    tree = ast.parse(source)
+    signatures = {}
+
+    for node in tree.body:
+        if isinstance(node, ast.FunctionDef):
+            args = []
+            for a in node.args.args:
+                args.append(a.arg)
+
+            # Ignore self for class methods
+            if args and args[0] == "self":
+                args = args[1:]
+
+            signatures[node.name] = args
+
+    return signatures
+
+
+def detect_signature_mismatches(module_source: str, test_source: str):
+    """
+    Detects incorrect function calls in test code by comparing them
+    to the real function signatures extracted from the module.
+
+    Returns a list of:
+    {
+        "function": "get_product",
+        "expected": ["product_id"],
+        "actual": ["x", "y"]
+    }
+    """
+    mismatches = []
+
+    # Extract real signatures
+    real_sigs = extract_function_signatures(module_source)
+
+    # Parse test file
+    try:
+        tree = ast.parse(test_source)
+    except Exception:
+        # If test file is broken, skip signature detection
+        return mismatches
+
+    # Walk through all function calls
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+
+        # Identify function name
+        fn_name = None
+
+        # Case: direct call → get_product(...)
+        if isinstance(node.func, ast.Name):
+            fn_name = node.func.id
+
+        # Case: attribute call → module.get_product(...)
+        elif isinstance(node.func, ast.Attribute):
+            fn_name = node.func.attr
+
+        if fn_name not in real_sigs:
+            continue
+
+        expected = real_sigs[fn_name]
+
+        # Extract actual arguments
+        actual = []
+
+        # Positional args
+        for arg in node.args:
+            if isinstance(arg, ast.Name):
+                actual.append(arg.id)
+            else:
+                actual.append("<value>")
+
+        # Keyword args
+        for kw in node.keywords:
+            actual.append(kw.arg)
+
+        # Compare lengths
+        if len(actual) != len(expected):
+            mismatches.append({
+                "function": fn_name,
+                "expected": expected,
+                "actual": actual
+            })
+            continue
+
+        # Compare keyword names (if used)
+        kw_names = [kw.arg for kw in node.keywords]
+        if kw_names and kw_names != expected:
+            mismatches.append({
+                "function": fn_name,
+                "expected": expected,
+                "actual": actual
+            })
+
+    return mismatches
+
+
+
+def generate_tests_for_module(
+    tmp_root: str,
+    module_name: str,
+    llm,
+    error_output: str,
+    missing_functions: list[str],
+):
+    """
+    Generate or refine tests for a single module using the refinement prompt.
+    Writes test_{module_name}.py into tmp_root/tests.
+    """
+
+    src_path = os.path.join(tmp_root, "src", f"{module_name}.py")
+    tests_dir = os.path.join(tmp_root, "tests")
+    os.makedirs(tests_dir, exist_ok=True)
+    test_path = os.path.join(tests_dir, f"test_{module_name}.py")
+
+    with open(src_path, "r", encoding="utf-8") as f:
+        module_source = f.read()
+
+    if os.path.exists(test_path):
+        with open(test_path, "r", encoding="utf-8") as f:
+            test_source = f.read()
+    else:
+        test_source = ""
+
+    # Pre‑pytest signature mismatch detection (optional but powerful)
+    try:
+        signature_mismatches = detect_signature_mismatches(module_source, test_source) if test_source else []
+    except Exception:
+        signature_mismatches = []
+
+    # Classify error categories from pytest output
+    error_categories = classify_errors(error_output, "")
+
+    prompt = MODULE_REFINEMENT_PROMPT.format(
+        module_name=module_name,
+        module_source=module_source,
+        test_file=test_source or "# No tests yet. Create a new pytest file.",
+        error_output=error_output or "No error output available.",
+        error_categories=error_categories or "[]",
+        missing_functions=missing_functions or "[]",
+        signature_mismatches=signature_mismatches or "[]",
+    )
+
+    new_tests = llm(prompt)
+    new_tests = textwrap.dedent(new_tests).strip()
+
+    with open(test_path, "w", encoding="utf-8") as f:
+        f.write(new_tests + "\n")
+
+
+def classify_errors(stderr: str, stdout: str) -> list:
+    """
+    Returns a list of detected error categories based on regex patterns.
+    """
+    text = stderr + "\n" + stdout
+    detected = []
+
+    for category, patterns in ERROR_PATTERNS.items():
+        for pattern in patterns:
+            if re.search(pattern, text, re.IGNORECASE):
+                detected.append(category)
+                break
+
+    return detected
 
 
 def read_coverage(tmp_root):
@@ -267,31 +545,34 @@ def coverage_for_module(cov_json_path, module_name):
 
     return round((covered / total) * 100, 2)
 
-def refinement_loop(tmp_root,project_root, llm, max_iter=10, min_cov=85):
+import os
+import tempfile
+
+def refinement_loop(project_root: str, llm, max_iter: int = 10, min_cov: float = 85.0) -> bool:
     """
     Multi-module refinement loop:
-    - For each module in src/, ensure a test file exists.
-    - If missing → create new tests.
-    - If exists → check module coverage.
-    - If coverage < threshold → refine tests.
-    - Repeat until all modules reach coverage threshold.
+    - Copies project to a temp dir
+    - For each module in src/:
+        - Ensure test file exists
+        - If missing → create tests
+        - If exists → check module coverage
+        - If coverage < threshold → refine tests
+    - Repeats until all modules reach coverage or max_iter is hit
+    - On success, copies tests back to real project
     """
 
+    tmp_root = tempfile.mkdtemp(prefix="refine_")
     copy_project_to_tmp(project_root, tmp_root)
-    
 
     for iteration in range(1, max_iter + 1):
         print(f"\n===== ITERATION {iteration} =====")
 
-        # Run pytest with coverage
         stdout, stderr, code = run_pytest(tmp_root)
         cov_json_path = os.path.join(tmp_root, "coverage.json")
 
-        # Read total coverage (optional)
         total_cov = read_coverage(tmp_root)
-        print(f"Total Coverage: {total_cov}%")
+        print(f"Total coverage: {total_cov}%")
 
-        # Loop through each module in src/
         src_dir = os.path.join(tmp_root, "src")
         all_modules_done = True
 
@@ -299,55 +580,54 @@ def refinement_loop(tmp_root,project_root, llm, max_iter=10, min_cov=85):
             if not module_file.endswith(".py"):
                 continue
 
-            module_name = module_file.replace(".py", "")
+            module_name = module_file[:-3]
             test_path = os.path.join(tmp_root, "tests", f"test_{module_name}.py")
 
-            # Compute module-specific coverage
             module_cov = coverage_for_module(cov_json_path, module_name)
             print(f"Module {module_name}: {module_cov}%")
 
-            # Extract module-specific errors
-            module_error = extract_module_error(stderr, stdout, module_name)
+            # Extract module-specific error output (you can refine this if you want)
+            module_error_output = stderr
 
-            # Missing functions for this module
             missing_fns = missing_functions_for_module(cov_json_path, module_name)
 
-            # CASE 1: Test file does NOT exist → create new tests
+            # CASE 1: No test file → create new tests
             if not os.path.exists(test_path):
-                print(f"[CREATE] No tests found for {module_name}. Generating new tests.")
+                print(f"[CREATE] No tests for {module_name}. Generating new tests.")
                 generate_tests_for_module(
-                    tmp_root,
-                    module_name,
-                    llm,
-                    module_error,
-                    missing_fns
+                    tmp_root=tmp_root,
+                    module_name=module_name,
+                    llm=llm,
+                    error_output=module_error_output,
+                    missing_functions=missing_fns,
                 )
                 all_modules_done = False
                 continue
 
             # CASE 2: Test file exists but coverage < threshold → refine
             if module_cov < min_cov:
-                print(f"[REFINE] Coverage for {module_name} is {module_cov}%. Refining tests.")
+                print(f"[REFINE] {module_name} coverage {module_cov}% < {min_cov}%. Refining tests.")
                 generate_tests_for_module(
-                    tmp_root,
-                    module_name,
-                    llm,
-                    module_error,
-                    missing_fns
+                    tmp_root=tmp_root,
+                    module_name=module_name,
+                    llm=llm,
+                    error_output=module_error_output,
+                    missing_functions=missing_fns,
                 )
                 all_modules_done = False
                 continue
 
-            # CASE 3: Module already meets coverage threshold
-            print(f"[OK] {module_name} already meets coverage threshold.")
+            print(f"[OK] {module_name} meets coverage threshold ({module_cov}%).")
 
-        # If all modules meet coverage threshold → stop
         if all_modules_done:
-            print("All modules meet coverage threshold.")
+            print("All modules meet coverage threshold. Copying tests back to project.")
+            copy_tests_from_tmp(tmp_root, project_root)
             return True
 
     print("Max iterations reached. Some modules did not reach coverage threshold.")
+    copy_tests_from_tmp(tmp_root, project_root)
     return False
+
 
 def refinement_loop_old(tmp_root,project_root, llm, max_iter=5, min_cov=85):
     
@@ -587,6 +867,149 @@ def copy_tests_from_tmp(tmp_root, real_project_root):
                 print(f"[COPIED] {file} → {real_tests}")
     except Exception as e:
         print(f"[ERROR] Failed to copy tests: {e}")
+
+
+MODULE_REFINEMENT_PROMPT = """
+You are a test‑generation and test‑refinement engine.
+
+Your job is to FIX and REWRITE the test file for the module "{module_name}" so that:
+- all syntax errors are removed
+- imports are correct
+- function signatures match the module source
+- missing functions are tested
+- wrong expected values are corrected
+- exception tests are added when appropriate
+- tests are deterministic and isolated
+- coverage improves for this module
+- the final output is a COMPLETE, VALID pytest file
+
+You MUST follow all rules below.
+
+============================================================
+### 1. MODULE SOURCE CODE (Ground Truth)
+============================================================
+This is the exact source code for the module you are testing:
+
+{module_source}
+
+Extract the real function signatures from this source and use them EXACTLY.
+
+============================================================
+### 2. CURRENT TEST FILE (Rewrite This)
+============================================================
+Here is the current test file (may contain errors):
+
+{test_file}
+
+Rewrite this ENTIRE file. Do NOT leave any broken code behind.
+
+============================================================
+### 3. PYTEST ERROR OUTPUT (What Went Wrong)
+============================================================
+These are the errors from pytest:
+
+{error_output}
+
+Use these errors to fix the test file.
+
+============================================================
+### 4. DETECTED ERROR CATEGORIES
+============================================================
+These error categories were detected:
+
+{error_categories}
+
+Fix ALL of them.
+
+============================================================
+### 5. MISSING FUNCTIONS (Coverage Gaps)
+============================================================
+These functions in the module have missing coverage:
+
+{missing_functions}
+
+You MUST add tests for these functions.
+
+============================================================
+### 6. SIGNATURE MISMATCHES (Detected Before Pytest)
+============================================================
+These incorrect function calls were detected:
+
+{signature_mismatches}
+
+Fix ALL of them by matching the real function signatures from the module.
+
+============================================================
+### 7. RULES FOR REFINEMENT
+============================================================
+
+#### A. Syntax Rules
+- The output MUST be valid Python.
+- No syntax errors, no indentation errors, no stray characters.
+
+#### B. Import Rules
+- Import the module using: `from src.{module_name} import *` OR explicit imports.
+- Do NOT modify sys.path.
+- Do NOT use relative imports.
+
+#### C. Function Signature Rules
+- Match the EXACT signature from the module.
+- Do NOT invent parameters.
+- Do NOT remove required parameters.
+- Use keyword arguments when helpful.
+
+#### D. Expected Value Rules
+- Infer correct expected values from the module source.
+- Do NOT hallucinate behavior not present in the code.
+
+#### E. Exception Rules
+- If the module raises exceptions, add `pytest.raises`.
+
+#### F. Coverage Rules
+- Add tests for missing functions.
+- Add edge‑case tests.
+- Add negative tests where appropriate.
+
+#### G. Test Quality Rules
+- Tests must be deterministic.
+- No randomness.
+- No external files.
+- No global state.
+- No mocking unless absolutely necessary.
+
+#### H. Output Rules
+- Output ONLY the final test file.
+- Do NOT include explanations.
+- Do NOT include markdown.
+- Do NOT include comments outside the test code.
+
+============================================================
+### 8. EXAMPLE OF FIXING A WRONG SIGNATURE
+============================================================
+
+Source:
+    def add_item(cart, item_id, qty):
+
+Wrong:
+    result = add_item(1)
+
+Correct:
+    result = add_item(cart={}, item_id=1, qty=1)
+
+============================================================
+### 9. NOW REWRITE THE TEST FILE
+============================================================
+
+Rewrite the ENTIRE test file for module "{module_name}" so that:
+- all errors are fixed
+- all signatures are correct
+- all missing functions are tested
+- coverage improves
+- the file is valid pytest code
+
+Output ONLY the final test file.
+"""
+
 
 if __name__ == "__main__":
     tmp_root = tempfile.mkdtemp(prefix="refine_")
