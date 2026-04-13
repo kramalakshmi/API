@@ -404,7 +404,7 @@ def copy_tests_from_tmp(tmp_root, real_project_root):
         if file.endswith(".py"):
             src = os.path.join(tmp_tests, file)
             dst = os.path.join(real_tests, file)
-            with open(src, "w") as f:
+            with open(src, "r") as f:
                 test_code= f.read()
             try:
         
