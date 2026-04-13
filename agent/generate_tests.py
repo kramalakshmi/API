@@ -410,7 +410,7 @@ def copy_tests_from_tmp(tmp_root, real_project_root):
         for file in os.listdir(tmp_tests):
             if file.endswith(".py"):
                 src = str(os.path.join(tmp_tests, file))
-                dst = str(os.path.join("tests", file))[1:]
+                dst = str(os.path.join("tests", file))
                 print(f"Copying {src} to {dst}...")
                 with open(src) as f:
                     test_code = f.read()
