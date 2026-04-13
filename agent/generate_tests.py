@@ -411,8 +411,9 @@ def copy_tests_from_tmp(tmp_root, real_project_root):
                 src = str(os.path.join(tmp_tests, file))[1:]
                 dst = str(os.path.join(real_tests, file))[1:]
                 print(f"Copying {src} to {dst}...")
-                with open(src, "r") as f:
-                    test_code= f.read()
+                with open(src) as f:
+                    test_code = f.read()
+                
                 try:
             
                     existing = repo.get_contents(dst,ref="multi_refinement")
