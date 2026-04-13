@@ -545,8 +545,7 @@ def coverage_for_module(cov_json_path, module_name):
 
     return round((covered / total) * 100, 2)
 
-import os
-import tempfile
+
 
 def refinement_loop(tmp_root,llm,project_root: str, max_iter: int = 10, min_cov: float = 85.0) -> bool:
     """
@@ -562,7 +561,7 @@ def refinement_loop(tmp_root,llm,project_root: str, max_iter: int = 10, min_cov:
     """
 
 
-
+    copy_project_to_tmp(project_root, tmp_root)
     for iteration in range(1, max_iter + 1):
         print(f"\n===== ITERATION {iteration} =====")
 
