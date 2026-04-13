@@ -183,9 +183,8 @@ def missing_functions_for_module(cov_json_path, module_name):
     # Iterate through all files in coverage.json
     for file_path, file_data in data.get("files", {}).items():
         # Only consider this module
-        print("Checking file:", file_path)
+       
         if not file_path.endswith(f"{module_name}.py"):
-            print(f"Skipping file: {file_path}")
             continue
         
         print("Missing lines:", file_data.get("missing_lines"))
@@ -453,6 +452,20 @@ def generate_tests_for_module(tmp_root, module_name, llm, error_output, missing_
     # Generate new tests
     new_tests = llm(prompt)
 
+    #check new_tests is valid python
+    try:
+        tree=ast.parse(new_tests)  
+        sigs={}
+        for node in tree.body:
+            if isinstance(node, ast.FunctionDef):
+                args = [a.arg for a in node.args.args]
+                sigs[node.name] = args
+
+        print("Extracted function signatures from generated tests:", sigs)
+    except SyntaxError as e:
+        print(f"[ERROR] LLM output is not valid Python: {e}")
+        return
+    
     # Write updated test file
     with open(test_path, "w", encoding="utf-8") as f:
         f.write(new_tests)
