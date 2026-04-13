@@ -8,13 +8,13 @@ import pytest
 from src.products import PRODUCTS, get_product, list_products
 
 
-def test_get_product_returns_expected_product_for_valid_ids():
+def test_get_product_returns_correct_product_for_valid_ids():
     assert get_product(1) == {"name": "Laptop", "price": 1200.0}
     assert get_product(2) == {"name": "Mouse", "price": 25.0}
     assert get_product(3) == {"name": "Keyboard", "price": 45.0}
 
 
-def test_get_product_returns_same_object_as_products_mapping():
+def test_get_product_returns_same_object_as_products_entry():
     assert get_product(1) is PRODUCTS[1]
 
 
@@ -24,13 +24,12 @@ def test_get_product_raises_value_error_for_missing_product():
 
 
 def test_get_product_raises_value_error_for_invalid_edge_case_ids():
-    with pytest.raises(ValueError, match="Product not found"):
-        get_product(0)
-    with pytest.raises(ValueError, match="Product not found"):
-        get_product(-1)
+    for invalid_id in (0, -1, 4):
+        with pytest.raises(ValueError, match="Product not found"):
+            get_product(invalid_id)
 
 
-def test_list_products_returns_all_products_in_insertion_order():
+def test_list_products_returns_all_products_in_order():
     expected = [
         {"name": "Laptop", "price": 1200.0},
         {"name": "Mouse", "price": 25.0},
@@ -46,5 +45,9 @@ def test_list_products_returns_new_list_each_time():
     assert first is not second
 
 
-def test_list_products_items_match_products_values():
-    assert list_products() == list(PRODUCTS.values())
+def test_list_products_contains_same_product_objects_as_products_values():
+    result = list_products()
+    expected_values = list(PRODUCTS.values())
+    assert len(result) == len(expected_values)
+    for returned, expected in zip(result, expected_values):
+        assert returned is expected
