@@ -410,7 +410,7 @@ def copy_tests_from_tmp(tmp_root, real_project_root):
         for file in os.listdir(tmp_tests):
             if file.endswith(".py"):
                 src = str(os.path.join(tmp_tests, file))
-                dst = str(os.path.join(real_tests, file))[1:]
+                dst = str(os.path.join("tests", file))[1:]
                 print(f"Copying {src} to {dst}...")
                 with open(src) as f:
                     test_code = f.read()
@@ -434,10 +434,6 @@ def copy_tests_from_tmp(tmp_root, real_project_root):
 
 if __name__ == "__main__":
     tmp_root = tempfile.mkdtemp(prefix="refine_")
-    for root, dirs, files in os.walk(PROJECT_ROOT):
-        print("ROOT:", root)
-        print("DIRS:", dirs)
-        print("FILES:", files)
-        print("-" * 40)
-    #refinement_loop(tmp_root, PROJECT_ROOT, llm)
-    #copy_tests_from_tmp(tmp_root, PROJECT_ROOT)
+    
+    refinement_loop(tmp_root, PROJECT_ROOT, llm)
+    copy_tests_from_tmp(tmp_root, PROJECT_ROOT)
