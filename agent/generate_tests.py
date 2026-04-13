@@ -116,6 +116,7 @@ def copy_project_to_tmp(project_root, tmp_root):
                         src_file = os.path.join(root, f)
                         dest_file = os.path.join(dest_dir, f)
                         shutil.copy2(src_file, dest_file)
+                        print(f"Copying {str(src_file)} to {str(dest_file)}...")
 
     return tmp_root
 
