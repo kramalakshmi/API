@@ -349,58 +349,6 @@ def detect_signature_mismatches(module_source: str, test_source: str):
 
 
 
-def generate_tests_for_module(
-    tmp_root: str,
-    module_name: str,
-    llm,
-    error_output: str,
-    missing_functions: list[str],
-):
-    """
-    Generate or refine tests for a single module using the refinement prompt.
-    Writes test_{module_name}.py into tmp_root/tests.
-    """
-
-    src_path = os.path.join(tmp_root, "src", f"{module_name}.py")
-    tests_dir = os.path.join(tmp_root, "tests")
-    os.makedirs(tests_dir, exist_ok=True)
-    test_path = os.path.join(tests_dir, f"test_{module_name}.py")
-
-    with open(src_path, "r", encoding="utf-8") as f:
-        module_source = f.read()
-
-    if os.path.exists(test_path):
-        with open(test_path, "r", encoding="utf-8") as f:
-            test_source = f.read()
-    else:
-        test_source = ""
-
-    # Pre‑pytest signature mismatch detection (optional but powerful)
-    try:
-        signature_mismatches = detect_signature_mismatches(module_source, test_source) if test_source else []
-    except Exception:
-        signature_mismatches = []
-
-    # Classify error categories from pytest output
-    error_categories = classify_errors(error_output, "")
-
-    prompt = MODULE_REFINEMENT_PROMPT.format(
-        module_name=module_name,
-        module_source=module_source,
-        test_file=test_source or "# No tests yet. Create a new pytest file.",
-        error_output=error_output or "No error output available.",
-        error_categories=error_categories or "[]",
-        missing_functions=missing_functions or "[]",
-        signature_mismatches=signature_mismatches or "[]",
-    )
-
-    new_tests = llm(prompt)
-    new_tests = textwrap.dedent(new_tests).strip()
-
-    with open(test_path, "w", encoding="utf-8") as f:
-        f.write(new_tests + "\n")
-
-
 def classify_errors(stderr: str, stdout: str) -> list:
     """
     Returns a list of detected error categories based on regex patterns.
@@ -690,65 +638,58 @@ def load_module_source(tmp_root, module_name):
     with open(module_path, "r", encoding="utf-8") as f:
         return f.read()
     
-def generate_tests_for_module(tmp_root, module_name, llm, error_output, missing_fns):
+
+
+def generate_tests_for_module(
+    tmp_root: str,
+    module_name: str,
+    llm,
+    error_output: str,
+    missing_functions: list[str],
+):
     """
-    Generates or refines tests for a single module.
-    If a test file exists AND coverage for this module is already 100%,
-    the function skips regeneration.
+    Generate or refine tests for a single module using the refinement prompt.
+    Writes test_{module_name}.py into tmp_root/tests.
     """
 
-    # Path to module test file
-    test_path = os.path.join(tmp_root, "tests", f"test_{module_name}.py")
+    src_path = os.path.join(tmp_root, "src", f"{module_name}.py")
+    tests_dir = os.path.join(tmp_root, "tests")
+    os.makedirs(tests_dir, exist_ok=True)
+    test_path = os.path.join(tests_dir, f"test_{module_name}.py")
 
-    # Load module source
-    module_source = load_module_source(tmp_root, module_name)
+    with open(src_path, "r", encoding="utf-8") as f:
+        module_source = f.read()
 
-    # Load existing test file (if any)
-    test_file = ""
     if os.path.exists(test_path):
         with open(test_path, "r", encoding="utf-8") as f:
-            test_file = f.read()
+            test_source = f.read()
+    else:
+        test_source = ""
 
-    # Load coverage.json
-    cov_json_path = os.path.join(tmp_root, "coverage.json")
-    module_missing = missing_functions_for_module(cov_json_path, module_name)
+    # Pre‑pytest signature mismatch detection (optional but powerful)
+    try:
+        signature_mismatches = detect_signature_mismatches(module_source, test_source) if test_source else []
+    except Exception:
+        signature_mismatches = []
 
-    # If test exists AND no missing functions → coverage is 100% → skip regeneration
-    if os.path.exists(test_path) and len(module_missing) == 0:
-        print(f"[SKIP] Module '{module_name}' already has full coverage.")
-        return
+    # Classify error categories from pytest output
+    error_categories = classify_errors(error_output, "")
 
-    # Build module-specific prompt
-    prompt = MODULE_PROMPT.format(
+    prompt = MODULE_REFINEMENT_PROMPT.format(
         module_name=module_name,
         module_source=module_source,
-        test_file=test_file,
-        error_output=error_output,
-        missing_functions=module_missing
+        test_file=test_source or "# No tests yet. Create a new pytest file.",
+        error_output=error_output or "No error output available.",
+        error_categories=error_categories or "[]",
+        missing_functions=missing_functions or "[]",
+        signature_mismatches=signature_mismatches or "[]",
     )
 
-    # Generate new tests
     new_tests = llm(prompt)
+    new_tests = textwrap.dedent(new_tests).strip()
 
-    #check new_tests is valid python
-    try:
-        tree=ast.parse(new_tests)  
-        sigs={}
-        for node in tree.body:
-            if isinstance(node, ast.FunctionDef):
-                args = [a.arg for a in node.args.args]
-                sigs[node.name] = args
-
-        print("Extracted function signatures from generated tests:", sigs)
-    except SyntaxError as e:
-        print(f"[ERROR] LLM output is not valid Python: {e}")
-        return
-    
-    # Write updated test file
     with open(test_path, "w", encoding="utf-8") as f:
-        f.write(new_tests)
-
-    print(f"[UPDATED] Regenerated tests for module '{module_name}'.")
+        f.write(new_tests + "\n")
 
 
 MODULE_PROMPT = """
