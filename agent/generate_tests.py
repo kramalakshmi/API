@@ -183,7 +183,9 @@ def missing_functions_for_module(cov_json_path, module_name):
     # Iterate through all files in coverage.json
     for file_path, file_data in data.get("files", {}).items():
         # Only consider this module
+        print("Checking file:", file_path)
         if not file_path.endswith(f"{module_name}.py"):
+            print(f"Skipping file: {file_path}")
             continue
 
         missing_lines = set(file_data.get("missing_lines", []))
@@ -235,6 +237,7 @@ def refinement_loop(tmp_root,project_root, llm, max_iter=5, min_cov=85):
             module_name = module_file.replace(".py", "")
 
             # Missing functions for this module
+            print(f"\nAnalyzing module '{module_name}'...")
             missing_fns = missing_functions_for_module(cov_json, module_name)
 
             # Extract module-specific errors
