@@ -5,8 +5,7 @@ if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
 import pytest
-from src.orders import calculate_order_total
-from src.orders import create_order
+from src.orders import calculate_order_total, create_order
 
 
 def test_calculate_order_total_single_item(monkeypatch):
@@ -33,9 +32,9 @@ def test_calculate_order_total_multiple_items(monkeypatch):
 
     monkeypatch.setattr("src.orders.get_product", fake_get_product)
 
-    result = calculate_order_total({"p1": 2, "p2": 4, "p3": 3})
+    result = calculate_order_total({"p1": 2, "p2": 4, "p3": 1})
 
-    assert result == 5.5 * 2 + 2.0 * 4 + 1.25 * 3
+    assert result == 20.25
 
 
 def test_calculate_order_total_empty_cart(monkeypatch):
@@ -56,7 +55,7 @@ def test_calculate_order_total_empty_cart(monkeypatch):
 def test_create_order_returns_expected_structure(monkeypatch):
     def fake_calculate_order_total(cart_items):
         assert cart_items == {"p1": 2, "p2": 1}
-        return 42.5
+        return 15.0
 
     monkeypatch.setattr("src.orders.calculate_order_total", fake_calculate_order_total)
 
@@ -65,7 +64,7 @@ def test_create_order_returns_expected_structure(monkeypatch):
 
     assert result == {
         "items": cart,
-        "total": 42.5,
+        "total": 15.0,
         "status": "CREATED",
     }
 
@@ -75,18 +74,11 @@ def test_create_order_raises_for_empty_cart():
         create_order({})
 
 
-def test_create_order_uses_calculated_total(monkeypatch):
-    def fake_get_product(product_id):
-        prices = {
-            "a": {"price": 3.0},
-            "b": {"price": 4.5},
-        }
-        return prices[product_id]
+def test_create_order_propagates_calculation_exception(monkeypatch):
+    def fake_calculate_order_total(cart_items):
+        raise RuntimeError("pricing unavailable")
 
-    monkeypatch.setattr("src.orders.get_product", fake_get_product)
+    monkeypatch.setattr("src.orders.calculate_order_total", fake_calculate_order_total)
 
-    result = create_order({"a": 2, "b": 2})
-
-    assert result["items"] == {"a": 2, "b": 2}
-    assert result["total"] == 15.0
-    assert result["status"] == "CREATED"
+    with pytest.raises(RuntimeError, match="pricing unavailable"):
+        create_order({"p1": 1})
