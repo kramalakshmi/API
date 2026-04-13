@@ -85,33 +85,9 @@ def get_test_file_path(source_file):
     return test_file if os.path.exists(test_file) else None
 
 
-def write_test_file(tmp_root, module_name, content):
 
-    test_dir = os.path.join(tmp_root, "tests")
-    os.makedirs(test_dir, exist_ok=True)
+    
 
-    g = Github(auth=auth)
-    repo = g.get_repo("kramalakshmi/API")
-    test_file = str(Path("tests")) +"/" + f"test_{module_name}.py"
-    print("Path "+ test_file)
-
-    try:
-        
-        existing = repo.get_contents(test_file,ref="multi_refinement")
-        
-        repo.update_file(
-            test_file, "Update generated tests", content, existing.sha, branch= "multi_refinement"
-        )
-    except:
-        repo.create_file(
-            test_file, "Add generated tests", content , branch= "multi_refinement"
-        )
-
-    file_path = os.path.join(test_dir, f"test_{module_name}.py")
-    with open(file_path, "w") as f:
-        f.write(content)
-
-    return file_path
 
 
 def log_iteration(i, category, stdout, stderr, coverage):
@@ -157,7 +133,7 @@ def run_pytest(tmp):
         capture_output=True,
         text=True
     )
-
+    print("Pytest completed with return code:", result.stdout+" \n"+result.stderr+"\n "+str(result.returncode))
     return result.stdout, result.stderr, result.returncode
 
 
@@ -231,8 +207,8 @@ def missing_functions_for_module(cov_json_path, module_name):
 
     return missing_fns
 
-def refinement_loop(project_root, llm, max_iter=10, min_cov=85):
-    tmp_root = tempfile.mkdtemp(prefix="refine_")
+def refinement_loop(tmp_root,project_root, llm, max_iter=5, min_cov=85):
+    
     copy_project_to_tmp(project_root, tmp_root)
 
     for i in range(1, max_iter + 1):
@@ -271,6 +247,7 @@ def refinement_loop(project_root, llm, max_iter=10, min_cov=85):
                 module_error,
                 missing_fns
             )
+
 
     print("Failed to reach coverage threshold.")
     return False
@@ -402,6 +379,50 @@ if PROJECT_ROOT not in sys.path:
 Now regenerate the full corrected test file for this module.
 """
 
-if __name__ == "__main__":
+def copy_tests_from_tmp(tmp_root, real_project_root):
+    """
+    Copies all test_*.py files from tmp_root/tests/ into
+    real_project_root/tests/, preserving filenames.
+    """
+
+    tmp_tests = os.path.join(tmp_root, "tests")
+    real_tests = os.path.join(real_project_root, "tests")
+
+    if not os.path.exists(tmp_tests):
+        print("[WARN] No tests directory found in tmp project.")
+        return
+
+    os.makedirs(real_tests, exist_ok=True)
+
+    test_dir = os.path.join(tmp_root, "tests")
+    os.makedirs(test_dir, exist_ok=True)
+
+    g = Github(auth=auth)
+    repo = g.get_repo("kramalakshmi/API")
     
-    refinement_loop(PROJECT_ROOT,llm)
+    for file in os.listdir(tmp_tests):
+        if file.endswith(".py"):
+            src = os.path.join(tmp_tests, file)
+            dst = os.path.join(real_tests, file)
+            with open(src, "w") as f:
+                test_code= f.read()
+            try:
+        
+                existing = repo.get_contents(dst,ref="multi_refinement")
+                
+                repo.update_file(
+                    dst, "Update generated tests", test_code, existing.sha, branch= "multi_refinement"
+                )
+            except:
+                repo.create_file(
+                    dst, "Add generated tests", test_code , branch= "multi_refinement"
+                )
+            
+            
+            print(f"[COPIED] {file} → {real_tests}")
+
+
+if __name__ == "__main__":
+    tmp_root = tempfile.mkdtemp(prefix="refine_")
+    refinement_loop(tmp_root, PROJECT_ROOT, llm)
+    copy_tests_from_tmp(tmp_root, PROJECT_ROOT)
