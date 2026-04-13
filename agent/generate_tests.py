@@ -388,7 +388,7 @@ def copy_tests_from_tmp(tmp_root, real_project_root):
     try:
         tmp_tests = os.path.join(tmp_root, "tests")
         real_tests = os.path.join(real_project_root, "tests")
-
+        
         for root, dirs, files in os.walk(tmp_tests):
                 print("ROOT:", root)
                 print("DIRS:", dirs)
@@ -434,5 +434,10 @@ def copy_tests_from_tmp(tmp_root, real_project_root):
 
 if __name__ == "__main__":
     tmp_root = tempfile.mkdtemp(prefix="refine_")
-    refinement_loop(tmp_root, PROJECT_ROOT, llm)
-    copy_tests_from_tmp(tmp_root, PROJECT_ROOT)
+    for root, dirs, files in os.walk(PROJECT_ROOT):
+        print("ROOT:", root)
+        print("DIRS:", dirs)
+        print("FILES:", files)
+        print("-" * 40)
+    #refinement_loop(tmp_root, PROJECT_ROOT, llm)
+    #copy_tests_from_tmp(tmp_root, PROJECT_ROOT)
