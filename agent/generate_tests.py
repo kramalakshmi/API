@@ -384,50 +384,52 @@ def copy_tests_from_tmp(tmp_root, real_project_root):
     Copies all test_*.py files from tmp_root/tests/ into
     real_project_root/tests/, preserving filenames.
     """
-    
-    tmp_tests = os.path.join(tmp_root, "tests")
-    real_tests = os.path.join(real_project_root, "tests")
+    try:
+        tmp_tests = os.path.join(tmp_root, "tests")
+        real_tests = os.path.join(real_project_root, "tests")
 
-    for root, dirs, files in os.walk(tmp_tests):
-            print("ROOT:", root)
-            print("DIRS:", dirs)
-            print("FILES:", files)
-            print("-" * 40)
+        for root, dirs, files in os.walk(tmp_tests):
+                print("ROOT:", root)
+                print("DIRS:", dirs)
+                print("FILES:", files)
+                print("-" * 40)
 
-    if not os.path.exists(tmp_tests):
-        print("[WARN] No tests directory found in tmp project.")
-        return
+        if not os.path.exists(tmp_tests):
+            print("[WARN] No tests directory found in tmp project.")
+            return
 
-    os.makedirs(real_tests, exist_ok=True)
+        os.makedirs(real_tests, exist_ok=True)
 
-    test_dir = os.path.join(tmp_root, "tests")
-    os.makedirs(test_dir, exist_ok=True)
+        test_dir = os.path.join(tmp_root, "tests")
+        os.makedirs(test_dir, exist_ok=True)
 
-    g = Github(auth=auth)
-    repo = g.get_repo("kramalakshmi/API")
-    
-    for file in os.listdir(tmp_tests):
-        if file.endswith(".py"):
-            src = str(os.path.join(tmp_tests, file))[1:]
-            dst = str(os.path.join(real_tests, file))[1:]
-            print(f"Copying {src} to {dst}...")
-            with open(src, "r") as f:
-                test_code= f.read()
-            try:
+        g = Github(auth=auth)
+        repo = g.get_repo("kramalakshmi/API")
         
-                existing = repo.get_contents(dst,ref="multi_refinement")
+        for file in os.listdir(tmp_tests):
+            if file.endswith(".py"):
+                src = str(os.path.join(tmp_tests, file))[1:]
+                dst = str(os.path.join(real_tests, file))[1:]
+                print(f"Copying {src} to {dst}...")
+                with open(src, "r") as f:
+                    test_code= f.read()
+                try:
+            
+                    existing = repo.get_contents(dst,ref="multi_refinement")
+                    
+                    repo.update_file(
+                        dst, "Update generated tests", test_code, existing.sha, branch= "multi_refinement"
+                    )
+                except Exception as ex:
+                    print(f"[ERROR] Failed to copy tests: {ex}")
+                    repo.create_file(
+                        dst, "Add generated tests", test_code , branch= "multi_refinement"
+                    )
                 
-                repo.update_file(
-                    dst, "Update generated tests", test_code, existing.sha, branch= "multi_refinement"
-                )
-            except:
-                repo.create_file(
-                    dst, "Add generated tests", test_code , branch= "multi_refinement"
-                )
-            
-            
-            print(f"[COPIED] {file} → {real_tests}")
-
+                
+                print(f"[COPIED] {file} → {real_tests}")
+    except Exception as e:
+        print(f"[ERROR] Failed to copy tests: {e}")
 
 if __name__ == "__main__":
     tmp_root = tempfile.mkdtemp(prefix="refine_")
