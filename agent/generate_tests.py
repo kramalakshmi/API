@@ -416,15 +416,15 @@ def copy_tests_from_tmp(tmp_root, real_project_root):
                 
                 try:
             
-                    existing = repo.get_contents(dst,ref="multi_refinement")
+                    existing = repo.get_contents(dst,ref="mutli_refinement")
                     
                     repo.update_file(
-                        dst, "Update generated tests", test_code, existing.sha, branch= "multi_refinement"
+                        dst, "Update generated tests", test_code, existing.sha, branch= "mutli_refinement"
                     )
                 except Exception as ex:
                     print(f"[ERROR] Failed to copy tests: {ex}")
                     repo.create_file(
-                        dst, "Add generated tests", test_code , branch= "multi_refinement"
+                        dst, "Add generated tests", test_code , branch= "mutli_refinement"
                     )
                 
                 
