@@ -187,7 +187,7 @@ def missing_functions_for_module(cov_json_path, module_name):
         if not file_path.endswith(f"{module_name}.py"):
             print(f"Skipping file: {file_path}")
             continue
-        print(file_data)
+        
         print("Missing lines:", file_data.get("missing_lines"))
         missing_lines = set(file_data.get("missing_lines", []))
         if not missing_lines:
