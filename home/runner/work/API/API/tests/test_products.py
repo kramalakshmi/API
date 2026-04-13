@@ -14,13 +14,20 @@ def test_get_product_returns_expected_product_for_valid_ids():
     assert get_product(3) == {"name": "Keyboard", "price": 45.0}
 
 
-def test_get_product_returns_same_object_from_products_mapping():
+def test_get_product_returns_same_object_as_products_mapping():
     assert get_product(1) is PRODUCTS[1]
 
 
 def test_get_product_raises_value_error_for_missing_product():
     with pytest.raises(ValueError, match="Product not found"):
         get_product(999)
+
+
+def test_get_product_raises_value_error_for_invalid_edge_case_ids():
+    with pytest.raises(ValueError, match="Product not found"):
+        get_product(0)
+    with pytest.raises(ValueError, match="Product not found"):
+        get_product(-1)
 
 
 def test_list_products_returns_all_products_in_insertion_order():
@@ -32,7 +39,7 @@ def test_list_products_returns_all_products_in_insertion_order():
     assert list_products() == expected
 
 
-def test_list_products_returns_new_list_each_call():
+def test_list_products_returns_new_list_each_time():
     first = list_products()
     second = list_products()
     assert first == second
