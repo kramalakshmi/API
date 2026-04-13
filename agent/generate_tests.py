@@ -210,7 +210,131 @@ def missing_functions_for_module(cov_json_path, module_name):
     print(f"Missing functions for module '{module_name}': {missing_fns}")
     return missing_fns
 
-def refinement_loop(tmp_root,project_root, llm, max_iter=5, min_cov=85):
+import os
+import json
+
+def coverage_for_module(cov_json_path, module_name):
+    """
+    Returns the percent coverage (0–100 float) for a specific module
+    based on pytest-cov's coverage.json.
+
+    Example:
+        coverage_for_module("coverage.json", "cart")
+        → 87.5
+    """
+
+    if not os.path.exists(cov_json_path):
+        return 0.0
+
+    try:
+        with open(cov_json_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except Exception:
+        return 0.0
+
+    # Look for the module file inside coverage.json
+    target_file = None
+    for file_path, file_data in data.get("files", {}).items():
+        if file_path.endswith(f"{module_name}.py"):
+            target_file = file_data
+            break
+
+    if not target_file:
+        return 0.0
+
+    # Extract coverage numbers
+    summary = target_file.get("summary", {})
+    covered = summary.get("covered_lines")
+    total = summary.get("num_statements")
+
+    if covered is None or total in (None, 0):
+        return 0.0
+
+    return round((covered / total) * 100, 2)
+
+def refinement_loop(tmp_root,project_root, llm, max_iter=10, min_cov=85):
+    """
+    Multi-module refinement loop:
+    - For each module in src/, ensure a test file exists.
+    - If missing → create new tests.
+    - If exists → check module coverage.
+    - If coverage < threshold → refine tests.
+    - Repeat until all modules reach coverage threshold.
+    """
+
+    copy_project_to_tmp(project_root, tmp_root)
+    
+
+    for iteration in range(1, max_iter + 1):
+        print(f"\n===== ITERATION {iteration} =====")
+
+        # Run pytest with coverage
+        stdout, stderr, code = run_pytest(tmp_root)
+        cov_json_path = os.path.join(tmp_root, "coverage.json")
+
+        # Read total coverage (optional)
+        total_cov = read_coverage(tmp_root)
+        print(f"Total Coverage: {total_cov}%")
+
+        # Loop through each module in src/
+        src_dir = os.path.join(tmp_root, "src")
+        all_modules_done = True
+
+        for module_file in os.listdir(src_dir):
+            if not module_file.endswith(".py"):
+                continue
+
+            module_name = module_file.replace(".py", "")
+            test_path = os.path.join(tmp_root, "tests", f"test_{module_name}.py")
+
+            # Compute module-specific coverage
+            module_cov = coverage_for_module(cov_json_path, module_name)
+            print(f"Module {module_name}: {module_cov}%")
+
+            # Extract module-specific errors
+            module_error = extract_module_error(stderr, stdout, module_name)
+
+            # Missing functions for this module
+            missing_fns = missing_functions_for_module(cov_json_path, module_name)
+
+            # CASE 1: Test file does NOT exist → create new tests
+            if not os.path.exists(test_path):
+                print(f"[CREATE] No tests found for {module_name}. Generating new tests.")
+                generate_tests_for_module(
+                    tmp_root,
+                    module_name,
+                    llm,
+                    module_error,
+                    missing_fns
+                )
+                all_modules_done = False
+                continue
+
+            # CASE 2: Test file exists but coverage < threshold → refine
+            if module_cov < min_cov:
+                print(f"[REFINE] Coverage for {module_name} is {module_cov}%. Refining tests.")
+                generate_tests_for_module(
+                    tmp_root,
+                    module_name,
+                    llm,
+                    module_error,
+                    missing_fns
+                )
+                all_modules_done = False
+                continue
+
+            # CASE 3: Module already meets coverage threshold
+            print(f"[OK] {module_name} already meets coverage threshold.")
+
+        # If all modules meet coverage threshold → stop
+        if all_modules_done:
+            print("All modules meet coverage threshold.")
+            return True
+
+    print("Max iterations reached. Some modules did not reach coverage threshold.")
+    return False
+
+def refinement_loop_old(tmp_root,project_root, llm, max_iter=5, min_cov=85):
     
     copy_project_to_tmp(project_root, tmp_root)
 
@@ -223,7 +347,7 @@ def refinement_loop(tmp_root,project_root, llm, max_iter=5, min_cov=85):
         print("Coverage:", coverage)
 
         if code == 0 and coverage >= min_cov:
-            print("Coverage threshold met.")
+            print("Coverage threshold met." + str(coverage))
             return True
 
         # Extract missing functions per module
