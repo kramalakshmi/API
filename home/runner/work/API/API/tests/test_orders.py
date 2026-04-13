@@ -22,9 +22,9 @@ def test_calculate_order_total_single_item(monkeypatch):
 
 def test_calculate_order_total_multiple_items(monkeypatch):
     products = {
-        "p1": {"price": 5.5},
-        "p2": {"price": 2.0},
-        "p3": {"price": 1.25},
+        "a": {"price": 2.5},
+        "b": {"price": 4.0},
+        "c": {"price": 1.25},
     }
 
     def fake_get_product(product_id):
@@ -32,9 +32,9 @@ def test_calculate_order_total_multiple_items(monkeypatch):
 
     monkeypatch.setattr("src.orders.get_product", fake_get_product)
 
-    result = calculate_order_total({"p1": 2, "p2": 4, "p3": 1})
+    result = calculate_order_total({"a": 2, "b": 1, "c": 4})
 
-    assert result == 20.25
+    assert result == 14.0
 
 
 def test_calculate_order_total_empty_cart(monkeypatch):
@@ -52,10 +52,20 @@ def test_calculate_order_total_empty_cart(monkeypatch):
     assert calls == []
 
 
+def test_calculate_order_total_propagates_get_product_error(monkeypatch):
+    def fake_get_product(product_id):
+        raise KeyError(product_id)
+
+    monkeypatch.setattr("src.orders.get_product", fake_get_product)
+
+    with pytest.raises(KeyError):
+        calculate_order_total({"missing": 1})
+
+
 def test_create_order_returns_expected_structure(monkeypatch):
     def fake_calculate_order_total(cart_items):
         assert cart_items == {"p1": 2, "p2": 1}
-        return 15.0
+        return 25.5
 
     monkeypatch.setattr("src.orders.calculate_order_total", fake_calculate_order_total)
 
@@ -64,7 +74,7 @@ def test_create_order_returns_expected_structure(monkeypatch):
 
     assert result == {
         "items": cart,
-        "total": 15.0,
+        "total": 25.5,
         "status": "CREATED",
     }
 
@@ -74,11 +84,11 @@ def test_create_order_raises_for_empty_cart():
         create_order({})
 
 
-def test_create_order_propagates_calculation_exception(monkeypatch):
+def test_create_order_propagates_calculate_order_total_error(monkeypatch):
     def fake_calculate_order_total(cart_items):
-        raise RuntimeError("pricing unavailable")
+        raise RuntimeError("pricing failure")
 
     monkeypatch.setattr("src.orders.calculate_order_total", fake_calculate_order_total)
 
-    with pytest.raises(RuntimeError, match="pricing unavailable"):
+    with pytest.raises(RuntimeError, match="pricing failure"):
         create_order({"p1": 1})
