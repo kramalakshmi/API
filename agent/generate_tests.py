@@ -33,29 +33,49 @@ def llm(prompt: str) -> str:
     return response.choices[0].message.content
 
 def extract_missing_functions(cov_json_path):
+    """
+    Returns a list of (file_path, function_name) tuples for all functions
+    that have missing coverage across the entire project.
+
+    Example return:
+        [
+            ("src/cart.py", "add_item"),
+            ("src/orders.py", "calculate_total")
+        ]
+    """
+
     if not os.path.exists(cov_json_path):
         return []
 
-    with open(cov_json_path) as f:
-        data = json.load(f)
+    try:
+        with open(cov_json_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except Exception:
+        return []
 
     missing = []
 
+    # Iterate through all files in coverage.json
     for file_path, file_data in data.get("files", {}).items():
-        executed = set(file_data["executed_lines"])
-        missing_lines = set(file_data["missing_lines"])
-
+        missing_lines = set(file_data.get("missing_lines", []))
         if not missing_lines:
             continue
 
-        # Extract function names from missing lines
-        for fn, fn_data in file_data.get("functions", {}).items():
-            start = fn_data["lineno"]
-            end = fn_data["end_lineno"]
+        # Function-level coverage info
+        functions = file_data.get("functions", {})
+
+        for fn_name, fn_info in functions.items():
+            start = fn_info.get("lineno")
+            end = fn_info.get("end_lineno")
+
+            if start is None or end is None:
+                continue
+
             fn_lines = set(range(start, end + 1))
 
+            # If any missing line overlaps this function → function is missing coverage
             if fn_lines & missing_lines:
-                missing.append((file_path, fn))
+                missing.append((file_path, fn_name))
 
     return missing
 
