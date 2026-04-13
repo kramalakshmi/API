@@ -384,9 +384,15 @@ def copy_tests_from_tmp(tmp_root, real_project_root):
     Copies all test_*.py files from tmp_root/tests/ into
     real_project_root/tests/, preserving filenames.
     """
-
+    
     tmp_tests = os.path.join(tmp_root, "tests")
     real_tests = os.path.join(real_project_root, "tests")
+
+    for root, dirs, files in os.walk(tmp_tests):
+            print("ROOT:", root)
+            print("DIRS:", dirs)
+            print("FILES:", files)
+            print("-" * 40)
 
     if not os.path.exists(tmp_tests):
         print("[WARN] No tests directory found in tmp project.")
