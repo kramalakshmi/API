@@ -675,7 +675,7 @@ def generate_tests_for_module(
     # Classify error categories from pytest output
     error_categories = classify_errors(error_output, "")
     print(f"Detected error categories for module '{module_name}': {error_categories}")
-    print(f"Detected error categories for module '{missing_functions}': {signature_mismatches}")
+    print(f"Detected missing_functions '{missing_functions}': {signature_mismatches}")
     prompt = MODULE_REFINEMENT_PROMPT.format(
         module_name=module_name,
         module_source=module_source,
@@ -793,14 +793,14 @@ def copy_tests_from_tmp(tmp_root, real_project_root):
                 
                 try:
             
-                    existing = repo.get_contents(dst,ref="mutli_refinement")
+                    existing = repo.get_contents(dst,ref="syntax_error_refine")
                     
                     repo.update_file(
-                        dst, "Update generated tests", test_code, existing.sha, branch= "mutli_refinement"
+                        dst, "Update generated tests", test_code, existing.sha, branch= "syntax_error_refine"
                     )
                 except Exception as ex:
                     repo.create_file(
-                        dst, "Add generated tests", test_code , branch= "mutli_refinement"
+                        dst, "Add generated tests", test_code , branch= "syntax_error_refine"
                     )
                 
                 
