@@ -217,6 +217,29 @@ def copy_project_to_tmp(project_root, tmp_root):
 
     return tmp_root
 
+def extract_module_name(stderr: str) -> str | None:
+    """
+    Extract module name from pytest stderr using multiple patterns.
+    """
+
+    # 1. From test file path
+    m = re.search(r"tests[/\\]test_(.+?)\.py", stderr)
+    if m:
+        return m.group(1)
+
+    # 2. From import errors
+    m = re.search(r"No module named ['\"]src\.(.+?)['\"]", stderr)
+    if m:
+        return m.group(1)
+
+    # 3. From traceback paths
+    m = re.search(r"src[/\\](.+?)\.py", stderr)
+    if m:
+        return m.group(1)
+
+    return None
+
+
 def extract_module_error(stderr, stdout, module_name):
     text = stderr + "\n" + stdout
     lines = [line for line in text.splitlines() if module_name in line or "ERROR" in line]
@@ -235,8 +258,21 @@ def run_pytest(tmp):
     if result.returncode != 0:
         print("Pytest failed. STDOUT:\n", result.stdout)
         print("Pytest failed. STDERR:\n", result.stderr)
-        error_categories = classify_errors(result.stderr, result.stdout)
+        #error_categories = classify_errors(result.stderr, result.stdout)
+        module_name = extract_module_name(result.stderr)
 
+        if module_name:
+            generate_tests_for_module(
+                        tmp_root=tmp_root,
+                        module_name=module_name,
+                        llm=llm,
+                        error_output=result.stdout,
+                        missing_functions=[],
+                        error_categories=[],
+                    )
+
+
+        
 
     return result.stdout, result.stderr, result.returncode
 
@@ -659,7 +695,7 @@ def generate_tests_for_module(
     Generate or refine tests for a single module using the refinement prompt.
     Writes test_{module_name}.py into tmp_root/tests.
     """
-
+    print(f"Generating/refining tests for module '{module_name}' with missing functions: {missing_functions}...")
     if module_name == "__init__":
         return  # do nothing
 
