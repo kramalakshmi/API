@@ -412,7 +412,9 @@ def missing_functions_for_module(cov_json_path, module_name):
        
         if not file_path.endswith(f"{module_name}.py"):
             continue
-        
+        if file_path.endswith("__init__.py"):
+            continue
+
         print("Missing lines:", file_data.get("missing_lines"))
         missing_lines = set(file_data.get("missing_lines", []))
         if not missing_lines:
@@ -451,8 +453,6 @@ def missing_functions_for_module(cov_json_path, module_name):
     print(f"Missing functions for module '{module_name}': {missing_fns}")
     return missing_fns
 
-import os
-import json
 
 def coverage_for_module(cov_json_path, module_name):
     """
@@ -476,6 +476,9 @@ def coverage_for_module(cov_json_path, module_name):
     # Look for the module file inside coverage.json
     target_file = None
     for file_path, file_data in data.get("files", {}).items():
+        if file_path.endswith("__init__.py"):
+            continue
+
         if file_path.endswith(f"{module_name}.py"):
             target_file = file_data
             break
@@ -523,8 +526,10 @@ def refinement_loop(tmp_root,llm,project_root: str, max_iter: int = 10, min_cov:
         all_modules_done = True
 
         for module_file in os.listdir(src_dir):
-            if not module_file.endswith(".py") or not module_file.startswith("__"):
+            if not module_file.endswith(".py"):
                 continue
+            if module_file == "__init__.py":
+                continue  # skip package initializer
 
             module_name = module_file[:-3]
             test_path = os.path.join(tmp_root, "tests", f"test_{module_name}.py") 
