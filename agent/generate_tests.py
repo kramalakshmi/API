@@ -867,7 +867,7 @@ Your job is to FIX and REWRITE the test file for the module "{module_name}" so t
 - wrong expected values are corrected
 - exception tests are added when appropriate
 - tests are deterministic and isolated
-- coverage improves for this module
+- coverage reaches 100% for this module
 - the final output is a COMPLETE, VALID pytest file
 
 You MUST follow all rules below.
