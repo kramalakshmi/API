@@ -674,7 +674,8 @@ def generate_tests_for_module(
 
     # Classify error categories from pytest output
     error_categories = classify_errors(error_output, "")
-
+    print(f"Detected error categories for module '{module_name}': {error_categories}")
+    print(f"Detected error categories for module '{missing_functions}': {signature_mismatches}")
     prompt = MODULE_REFINEMENT_PROMPT.format(
         module_name=module_name,
         module_source=module_source,
