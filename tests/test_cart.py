@@ -200,8 +200,9 @@ def test_clear_empties_cart():
     cart.add_item(1, 2)
     cart.add_item(2, 1)
 
-    cart.clear()
+    result = cart.clear()
 
+    assert result is None
     assert cart.items == {}
     assert cart.total_items() == 0
 
