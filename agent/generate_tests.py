@@ -934,7 +934,7 @@ Wrong:
     result = add_item(1)
 
 Correct:
-    result = add_item(cart={}, item_id=1, qty=1)
+    result = add_item(cart={{}}, item_id=1, qty=1)
 
 ============================================================
 ### 9. NOW REWRITE THE TEST FILE
