@@ -523,11 +523,11 @@ def refinement_loop(tmp_root,llm,project_root: str, max_iter: int = 10, min_cov:
         all_modules_done = True
 
         for module_file in os.listdir(src_dir):
-            if not module_file.endswith(".py") and not module_file.startswith("__"):
+            if not module_file.endswith(".py") or not module_file.startswith("__"):
                 continue
 
             module_name = module_file[:-3]
-            test_path = os.path.join(tmp_root, "tests", f"test_{module_name}.py")
+            test_path = os.path.join(tmp_root, "tests", f"test_{module_name}.py") 
 
             module_cov = coverage_for_module(cov_json_path, module_name)
             print(f"Module {module_name}: {module_cov}%")
