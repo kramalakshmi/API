@@ -34,7 +34,7 @@ def test_get_product_raises_value_error_for_missing_keys(product_id):
 @pytest.mark.parametrize("product_id", [[1], {1: "a"}])
 def test_get_product_raises_type_error_for_unhashable_keys(product_id):
     with pytest.raises(TypeError):
-        get_product(product_id,1)
+        get_product(product_id)
 
 
 def test_get_product_accepts_bool_true_as_key_equivalent_to_1():
