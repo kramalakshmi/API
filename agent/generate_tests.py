@@ -529,8 +529,8 @@ def refinement_loop(tmp_root,llm,project_root: str, max_iter: int = 10, min_cov:
             print(f"Module {module_file}")
             if not module_file.endswith(".py"):
                 continue
-            if module_file == "__init__.py":
-                print("[SKIP] Skipping __init__.py")
+            if module_file == "___init__.py":
+                print("[SKIP] Skipping ___init__.py")
                 continue
 
 
