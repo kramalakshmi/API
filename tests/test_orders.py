@@ -10,9 +10,7 @@ def test_calculate_order_total_single_item(monkeypatch):
 
     monkeypatch.setattr("src.orders.get_product", fake_get_product)
 
-    result = calculate_order_total({"p1": 3})
-
-    assert result == 30.0
+    assert calculate_order_total({"p1": 3}) == 30.0
 
 
 def test_calculate_order_total_multiple_items(monkeypatch):
@@ -27,9 +25,7 @@ def test_calculate_order_total_multiple_items(monkeypatch):
 
     monkeypatch.setattr("src.orders.get_product", fake_get_product)
 
-    result = calculate_order_total({"a": 2, "b": 1, "c": 4})
-
-    assert result == 14.0
+    assert calculate_order_total({"a": 2, "b": 1, "c": 4}) == 14.0
 
 
 def test_calculate_order_total_empty_cart_returns_zero_and_does_not_call_get_product(monkeypatch):
@@ -38,9 +34,7 @@ def test_calculate_order_total_empty_cart_returns_zero_and_does_not_call_get_pro
 
     monkeypatch.setattr("src.orders.get_product", fake_get_product)
 
-    result = calculate_order_total({})
-
-    assert result == 0.0
+    assert calculate_order_total({}) == 0.0
 
 
 def test_calculate_order_total_calls_get_product_for_each_cart_item(monkeypatch):
@@ -90,9 +84,7 @@ def test_calculate_order_total_allows_negative_quantity(monkeypatch):
 
     monkeypatch.setattr("src.orders.get_product", fake_get_product)
 
-    result = calculate_order_total({"p1": -2})
-
-    assert result == -10.0
+    assert calculate_order_total({"p1": -2}) == -10.0
 
 
 def test_create_order_returns_expected_structure(monkeypatch):
