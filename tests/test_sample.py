@@ -1,63 +1,56 @@
-import pytest
+# 1. Syntax error
+def test_syntax_error(
+    assert True
 
-from src.sample import add, divide, greet, list_items
+# 2. Import error
+from src.nonexistent import missing_fn
 
+# 3. Wrong sys.path manipulation
+import sys
+sys.path.insert(0, "wrong_path")
 
-def test_add_with_positive_integers():
-    assert add(1, 2) == 3
+# 4. NameError
+def test_name_error():
+    result = addd(1, 2)  # typo: addd
 
+# 5. Wrong function signature
+def test_wrong_signature():
+    result = divide(1)  # missing second argument
 
-def test_add_with_negative_numbers():
-    assert add(-1, -2) == -3
+# 6. Wrong expected value
+def test_wrong_expected_value():
+    assert add(1, 2) == 100
 
+# 7. Missing exception test
+def test_missing_exception():
+    divide(1, 0)  # should use pytest.raises
 
-def test_add_with_zero():
-    assert add(0, 5) == 5
+# 8. Wrong fixture usage
+def test_bad_fixture(nonexistent_fixture):
+    assert True
 
+# 9. Test that never executes source code
+def test_no_execution():
+    assert True
 
-def test_add_with_floats():
-    assert add(1.5, 2.5) == 4.0
+# 10. Test that crashes before running
+def test_crash():
+    raise RuntimeError("crash before running")
 
+# 11. Duplicate/conflicting sys.path logic
+sys.path.insert(0, "another_wrong_path")
 
-def test_divide_with_integers():
-    assert divide(8, 2) == 4.0
+# 12. Test for non-existent file
+def test_file_not_found():
+    open("no_such_file.txt").read()
 
+# 13. Global state dependency
+GLOBAL_LIST = []
+def test_global_state():
+    GLOBAL_LIST.append(1)
+    assert GLOBAL_LIST == [1]
 
-def test_divide_with_float_result():
-    assert divide(7, 2) == 3.5
-
-
-def test_divide_with_negative_numbers():
-    assert divide(-9, 3) == -3.0
-
-
-def test_divide_by_zero_raises_value_error():
-    with pytest.raises(ValueError, match="b cannot be zero"):
-        divide(1, 0)
-
-
-def test_greet_returns_expected_message():
-    assert greet("Alice") == "Hello, Alice!"
-
-
-def test_greet_with_empty_string():
-    assert greet("") == "Hello, !"
-
-
-def test_list_items_returns_expected_list():
-    assert list_items() == ["apple", "banana", "carrot"]
-
-
-def test_list_items_returns_new_list_each_time():
-    first = list_items()
-    second = list_items()
-
-    assert first == second
-    assert first is not second
-
-
-def test_list_items_contents_are_in_order():
-    items = list_items()
-    assert items[0] == "apple"
-    assert items[1] == "banana"
-    assert items[2] == "carrot"
+# 14. Incorrect testing of __main__
+def test_main_block():
+    import src.sample
+    src.sample.__main__()
