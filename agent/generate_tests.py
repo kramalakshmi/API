@@ -529,7 +529,9 @@ def refinement_loop(tmp_root,llm,project_root: str, max_iter: int = 10, min_cov:
             if not module_file.endswith(".py"):
                 continue
             if module_file == "__init__.py":
-                continue  # skip package initializer
+                print("[SKIP] Skipping __init__.py")
+                continue
+
 
             module_name = module_file[:-3]
             test_path = os.path.join(tmp_root, "tests", f"test_{module_name}.py") 
@@ -656,6 +658,9 @@ def generate_tests_for_module(
     Generate or refine tests for a single module using the refinement prompt.
     Writes test_{module_name}.py into tmp_root/tests.
     """
+
+    if module_name == "__init__":
+        return  # do nothing
 
     src_path = os.path.join(tmp_root, "src", f"{module_name}.py")
     tests_dir = os.path.join(tmp_root, "tests")
