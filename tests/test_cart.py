@@ -9,6 +9,11 @@ def test_cart_init_starts_empty():
     assert cart.total_items() == 0
 
 
+def test_total_items_returns_zero_for_new_cart():
+    cart = Cart()
+    assert cart.total_items() == 0
+
+
 def test_add_item_with_default_quantity():
     cart = Cart()
     cart.add_item(1)
@@ -40,6 +45,27 @@ def test_add_item_multiple_products_updates_total_items():
     assert cart.total_items() == 6
 
 
+def test_add_item_with_keyword_arguments():
+    cart = Cart()
+    cart.add_item(product_id=8, qty=2)
+    assert cart.items == {8: 2}
+    assert cart.total_items() == 2
+
+
+def test_add_item_accepts_zero_as_product_id():
+    cart = Cart()
+    cart.add_item(0, 3)
+    assert cart.items == {0: 3}
+    assert cart.total_items() == 3
+
+
+def test_add_item_accepts_negative_product_id():
+    cart = Cart()
+    cart.add_item(-1, 2)
+    assert cart.items == {-1: 2}
+    assert cart.total_items() == 2
+
+
 @pytest.mark.parametrize("qty", [0, -1, -5])
 def test_add_item_raises_for_non_positive_quantity(qty):
     cart = Cart()
@@ -60,18 +86,16 @@ def test_add_item_invalid_quantity_does_not_modify_existing_cart():
     assert cart.total_items() == 2
 
 
-def test_add_item_with_keyword_arguments():
+def test_add_item_after_failed_remove_still_works():
     cart = Cart()
-    cart.add_item(product_id=8, qty=2)
-    assert cart.items == {8: 2}
+
+    with pytest.raises(ValueError, match="Item not in cart"):
+        cart.remove_item(123)
+
+    cart.add_item(123, 2)
+
+    assert cart.items == {123: 2}
     assert cart.total_items() == 2
-
-
-def test_add_item_accepts_zero_as_product_id():
-    cart = Cart()
-    cart.add_item(0, 3)
-    assert cart.items == {0: 3}
-    assert cart.total_items() == 3
 
 
 def test_remove_item_deletes_existing_product():
@@ -148,6 +172,18 @@ def test_remove_item_then_readd_same_product():
     assert cart.total_items() == 5
 
 
+def test_remove_one_product_does_not_affect_other_accumulated_product():
+    cart = Cart()
+    cart.add_item(1, 2)
+    cart.add_item(1, 1)
+    cart.add_item(2, 5)
+
+    cart.remove_item(2)
+
+    assert cart.items == {1: 3}
+    assert cart.total_items() == 3
+
+
 def test_total_items_returns_sum_after_multiple_operations():
     cart = Cart()
     cart.add_item(1, 2)
@@ -159,8 +195,14 @@ def test_total_items_returns_sum_after_multiple_operations():
     assert cart.total_items() == 5
 
 
-def test_total_items_returns_zero_for_new_cart():
+def test_clear_empties_cart():
     cart = Cart()
+    cart.add_item(1, 2)
+    cart.add_item(2, 1)
+
+    cart.clear()
+
+    assert cart.items == {}
     assert cart.total_items() == 0
 
 
@@ -171,17 +213,6 @@ def test_total_items_returns_zero_after_clearing_non_empty_cart():
 
     cart.clear()
 
-    assert cart.total_items() == 0
-
-
-def test_clear_empties_cart():
-    cart = Cart()
-    cart.add_item(1, 2)
-    cart.add_item(2, 1)
-
-    cart.clear()
-
-    assert cart.items == {}
     assert cart.total_items() == 0
 
 
@@ -275,25 +306,25 @@ def test_clear_removes_all_products_after_accumulated_adds():
     assert cart.total_items() == 0
 
 
-def test_remove_one_product_does_not_affect_other_accumulated_product():
+def test_clear_removes_all_items_reference_contents():
+    cart = Cart()
+    cart.add_item(11, 1)
+    items_ref = cart.items
+
+    cart.clear()
+
+    assert items_ref == {}
+    assert cart.items == {}
+    assert cart.total_items() == 0
+
+
+def test_sequence_of_operations_produces_expected_final_state():
     cart = Cart()
     cart.add_item(1, 2)
-    cart.add_item(1, 1)
-    cart.add_item(2, 5)
-
+    cart.add_item(2, 1)
+    cart.add_item(1, 3)
     cart.remove_item(2)
+    cart.add_item(3)
 
-    assert cart.items == {1: 3}
-    assert cart.total_items() == 3
-
-
-def test_add_item_after_failed_remove_still_works():
-    cart = Cart()
-
-    with pytest.raises(ValueError, match="Item not in cart"):
-        cart.remove_item(123)
-
-    cart.add_item(123, 2)
-
-    assert cart.items == {123: 2}
-    assert cart.total_items() == 2
+    assert cart.items == {1: 5, 3: 1}
+    assert cart.total_items() == 6
