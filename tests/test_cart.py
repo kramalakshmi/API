@@ -246,3 +246,54 @@ def test_clear_after_failed_add_preserves_then_clears_state():
 
     assert cart.items == {}
     assert cart.total_items() == 0
+
+
+def test_remove_item_after_clear_raises():
+    cart = Cart()
+    cart.add_item(1, 1)
+    cart.clear()
+
+    with pytest.raises(ValueError, match="Item not in cart"):
+        cart.remove_item(1)
+
+    assert cart.items == {}
+    assert cart.total_items() == 0
+
+
+def test_clear_removes_all_products_after_accumulated_adds():
+    cart = Cart()
+    cart.add_item(1, 2)
+    cart.add_item(1, 3)
+    cart.add_item(2, 4)
+
+    assert cart.items == {1: 5, 2: 4}
+    assert cart.total_items() == 9
+
+    cart.clear()
+
+    assert cart.items == {}
+    assert cart.total_items() == 0
+
+
+def test_remove_one_product_does_not_affect_other_accumulated_product():
+    cart = Cart()
+    cart.add_item(1, 2)
+    cart.add_item(1, 1)
+    cart.add_item(2, 5)
+
+    cart.remove_item(2)
+
+    assert cart.items == {1: 3}
+    assert cart.total_items() == 3
+
+
+def test_add_item_after_failed_remove_still_works():
+    cart = Cart()
+
+    with pytest.raises(ValueError, match="Item not in cart"):
+        cart.remove_item(123)
+
+    cart.add_item(123, 2)
+
+    assert cart.items == {123: 2}
+    assert cart.total_items() == 2
