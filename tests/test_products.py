@@ -25,14 +25,18 @@ def test_get_product_returns_expected_product_for_valid_ids(product_id, expected
     assert get_product(product_id) == expected
 
 
-@pytest.mark.parametrize("product_id", [0, 4, -1, 999, "1", None, (1,)])
-def test_get_product_raises_value_error_for_missing_keys(product_id):
+def test_get_product_returns_same_object_from_products_mapping():
+    assert get_product(1) is PRODUCTS[1]
+
+
+@pytest.mark.parametrize("product_id", [0, 4, -1, 999, "1", None, (1,), False])
+def test_get_product_raises_value_error_for_missing_product_ids(product_id):
     with pytest.raises(ValueError, match="Product not found"):
         get_product(product_id)
 
 
 @pytest.mark.parametrize("product_id", [[1], {1: "a"}])
-def test_get_product_raises_type_error_for_unhashable_keys(product_id):
+def test_get_product_raises_type_error_for_unhashable_product_ids(product_id):
     with pytest.raises(TypeError):
         get_product(product_id)
 
@@ -45,18 +49,18 @@ def test_get_product_accepts_float_one_as_key_equivalent_to_1():
     assert get_product(1.0) is PRODUCTS[1]
 
 
-def test_get_product_returns_same_object_as_products_mapping():
-    product = get_product(1)
-    assert product is PRODUCTS[1]
+def test_get_product_on_empty_products_raises_value_error():
+    PRODUCTS.clear()
+    with pytest.raises(ValueError, match="Product not found"):
+        get_product(1)
 
 
 def test_list_products_returns_all_products_in_insertion_order():
-    expected = [
+    assert list_products() == [
         {"name": "Laptop", "price": 1200.0},
         {"name": "Mouse", "price": 25.0},
         {"name": "Keyboard", "price": 45.0},
     ]
-    assert list_products() == expected
 
 
 def test_list_products_matches_products_values():
@@ -86,14 +90,6 @@ def test_modifying_returned_list_does_not_change_products_mapping():
     assert PRODUCTS[3] == {"name": "Keyboard", "price": 45.0}
 
 
-def test_products_mapping_has_expected_structure():
-    assert set(PRODUCTS.keys()) == {1, 2, 3}
-    for product in PRODUCTS.values():
-        assert set(product.keys()) == {"name", "price"}
-        assert isinstance(product["name"], str)
-        assert isinstance(product["price"], float)
-
-
 def test_modifying_product_from_get_product_reflects_in_products_mapping():
     product = get_product(1)
     product["name"] = "Updated Laptop"
@@ -111,18 +107,16 @@ def test_list_products_on_empty_products_returns_empty_list():
     assert list_products() == []
 
 
-def test_get_product_on_empty_products_raises_value_error():
-    PRODUCTS.clear()
-    with pytest.raises(ValueError, match="Product not found"):
-        get_product(1)
-
-
 def test_list_products_returns_empty_list_when_products_already_empty():
     PRODUCTS.clear()
-    assert list_products() == []
-    assert isinstance(list_products(), list)
+    result = list_products()
+    assert result == []
+    assert isinstance(result, list)
 
 
-def test_get_product_false_raises_value_error():
-    with pytest.raises(ValueError, match="Product not found"):
-        get_product(False)
+def test_products_mapping_has_expected_structure():
+    assert set(PRODUCTS.keys()) == {1, 2, 3}
+    for product in PRODUCTS.values():
+        assert set(product.keys()) == {"name", "price"}
+        assert isinstance(product["name"], str)
+        assert isinstance(product["price"], float)
