@@ -3,6 +3,16 @@ import pytest
 from src.products import PRODUCTS, get_product, list_products
 
 
+@pytest.fixture(autouse=True)
+def restore_products():
+    original = {key: value.copy() for key, value in PRODUCTS.items()}
+    try:
+        yield
+    finally:
+        PRODUCTS.clear()
+        PRODUCTS.update({key: value.copy() for key, value in original.items()})
+
+
 @pytest.mark.parametrize(
     "product_id, expected",
     [
@@ -85,41 +95,34 @@ def test_products_mapping_has_expected_structure():
 
 
 def test_modifying_product_from_get_product_reflects_in_products_mapping():
-    original_name = PRODUCTS[1]["name"]
-    try:
-        product = get_product(1)
-        product["name"] = "Updated Laptop"
-        assert PRODUCTS[1]["name"] == "Updated Laptop"
-    finally:
-        PRODUCTS[1]["name"] = original_name
+    product = get_product(1)
+    product["name"] = "Updated Laptop"
+    assert PRODUCTS[1]["name"] == "Updated Laptop"
 
 
 def test_modifying_product_from_list_products_reflects_in_products_mapping():
-    original_price = PRODUCTS[2]["price"]
-    try:
-        products_list = list_products()
-        products_list[1]["price"] = 30.0
-        assert PRODUCTS[2]["price"] == 30.0
-    finally:
-        PRODUCTS[2]["price"] = original_price
+    products_list = list_products()
+    products_list[1]["price"] = 30.0
+    assert PRODUCTS[2]["price"] == 30.0
 
 
 def test_list_products_on_empty_products_returns_empty_list():
-    original_products = PRODUCTS.copy()
-    try:
-        PRODUCTS.clear()
-        assert list_products() == []
-    finally:
-        PRODUCTS.clear()
-        PRODUCTS.update(original_products)
+    PRODUCTS.clear()
+    assert list_products() == []
 
 
 def test_get_product_on_empty_products_raises_value_error():
-    original_products = PRODUCTS.copy()
-    try:
-        PRODUCTS.clear()
-        with pytest.raises(ValueError, match="Product not found"):
-            get_product(1)
-    finally:
-        PRODUCTS.clear()
-        PRODUCTS.update(original_products)
+    PRODUCTS.clear()
+    with pytest.raises(ValueError, match="Product not found"):
+        get_product(1)
+
+
+def test_list_products_returns_empty_list_when_products_already_empty():
+    PRODUCTS.clear()
+    assert list_products() == []
+    assert isinstance(list_products(), list)
+
+
+def test_get_product_false_raises_value_error():
+    with pytest.raises(ValueError, match="Product not found"):
+        get_product(False)
