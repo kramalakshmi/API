@@ -1,5 +1,4 @@
 1. Project Structure Scenarios
-These happen because real repos are messy.
 1.1 Modules with side effects on import
 Examples:
 - DB connections
@@ -135,7 +134,7 @@ Examples:
 - partials
 Your signature detector must be hardened.
 
- 6. Repository‑Level Scenarios
+ 6. Repository Level Scenarios
 These appear only when running on real repos.
 6.1 Modules that should not be tested
 Examples:
@@ -177,7 +176,6 @@ Your agent must sanitize output.
 Your agent must retry gracefully.
 
  8. Human‑Code Scenarios
-Real developers write messy code.
 8.1 Functions with misleading names
 Example:
 def add(a, b):
