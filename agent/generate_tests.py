@@ -598,8 +598,9 @@ def refinement_loop(tmp_root,llm,project_root: str, max_iter: int = 10, min_cov:
 
             # CASE 2: Test file exists but coverage < threshold → refine
             if module_cov < min_cov:
-                print(f"[REFINE] {module_name} coverage {module_cov}% < {min_cov}%. Refining tests.")
+                
                 feedback=f"[REFINE] {module_name} coverage {module_cov}% < {min_cov}%. Refining tests to increase coverage to {min_cov}% or higher."
+                print(feedback)
                 generate_tests_for_module(
                     tmp_root=tmp_root,
                     module_name=module_name,
@@ -738,7 +739,7 @@ def generate_tests_for_module(
         signature_mismatches=signature_mismatches or "[]",
         feedback=feedback or "No additional feedback."
     )
-
+    print("Prompt for LLM:\n", prompt)
     new_tests = llm(prompt)
     new_tests = textwrap.dedent(new_tests).strip()
 
