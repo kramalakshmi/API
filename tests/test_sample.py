@@ -13,18 +13,17 @@ from src.sample import add, divide, greet, list_items
         (1, 2.5, 3.5),
         ("Hello, ", "world", "Hello, world"),
         ([1, 2], [3], [1, 2, 3]),
+        ("", "", ""),
+        ([], [], []),
     ],
 )
 def test_add(a, b, expected):
     assert add(a, b) == expected
 
 
-def test_add_with_empty_strings():
-    assert add("", "") == ""
-
-
-def test_add_with_empty_lists():
-    assert add([], []) == []
+def test_add_type_error_for_incompatible_types():
+    with pytest.raises(TypeError):
+        add(1, "2")
 
 
 @pytest.mark.parametrize(
@@ -53,6 +52,7 @@ def test_divide_by_zero_raises_value_error():
         ("", "Hello, !"),
         ("Bob Smith", "Hello, Bob Smith!"),
         ("  spaced  ", "Hello,   spaced  !"),
+        (123, "Hello, 123!"),
     ],
 )
 def test_greet(name, expected):
@@ -85,3 +85,8 @@ def test_list_items_contents_and_order():
     assert items[0] == "apple"
     assert items[1] == "banana"
     assert items[2] == "carrot"
+
+
+def test_list_items_returns_strings_only():
+    items = list_items()
+    assert all(isinstance(item, str) for item in items)
