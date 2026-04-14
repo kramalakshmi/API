@@ -90,3 +90,24 @@ def test_list_items_contents_and_order():
 def test_list_items_returns_strings_only():
     items = list_items()
     assert all(isinstance(item, str) for item in items)
+
+
+def test_module_main_block_not_executed_on_import(capsys):
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert captured.err == ""
+
+
+def test_main_block_line_is_not_executed_during_import():
+    import src.sample as sample_module
+
+    assert sample_module.__name__ == "src.sample"
+
+
+def test_module_source_contains_main_guard_and_print_statement():
+    import inspect
+    import src.sample as sample_module
+
+    source = inspect.getsource(sample_module)
+    assert 'if __name__ == "__main__":' in source
+    assert 'print("This should not be tested")' in source
