@@ -15,19 +15,16 @@ def test_get_product_returns_expected_product_for_valid_ids(product_id, expected
     assert get_product(product_id) == expected
 
 
-@pytest.mark.parametrize("product_id", [0, 4, -1, 999, "1", None, (1,), [1]])
-def test_get_product_raises_for_missing_or_non_matching_keys(product_id):
-    if isinstance(product_id, list):
-        with pytest.raises(TypeError):
-            get_product(product_id)
-    else:
-        with pytest.raises(ValueError, match="Product not found"):
-            get_product(product_id)
+@pytest.mark.parametrize("product_id", [0, 4, -1, 999, "1", None, (1,)])
+def test_get_product_raises_value_error_for_missing_keys(product_id):
+    with pytest.raises(ValueError, match="Product not found"):
+        get_product(product_id)
 
 
-def test_get_product_raises_type_error_for_unhashable_dict_key():
+@pytest.mark.parametrize("product_id", [[1], {1: "a"}])
+def test_get_product_raises_type_error_for_unhashable_keys(product_id):
     with pytest.raises(TypeError):
-        get_product({1: "a"})
+        get_product(product_id)
 
 
 def test_get_product_accepts_bool_true_as_key_equivalent_to_1():
