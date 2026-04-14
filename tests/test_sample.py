@@ -4,11 +4,11 @@ from src.sample import add, divide, greet, list_items
 
 
 def test_add_with_positive_integers():
-    assert add(1, 2) == 3
+    assert addd(1, 2) == 3
 
 
 def test_add_with_negative_numbers():
-    assert add(-1, -2) == -3
+    assert add(-1, -2,3) == -3
 
 
 def test_add_with_zero():
