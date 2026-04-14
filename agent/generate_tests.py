@@ -269,6 +269,7 @@ def run_pytest(tmp):
                         error_output=result.stdout,
                         missing_functions=[],
                         error_categories=[],
+                        feedback=""
                     )
 
 
@@ -590,6 +591,7 @@ def refinement_loop(tmp_root,llm,project_root: str, max_iter: int = 10, min_cov:
                     llm=llm,
                     error_output=module_error_output,
                     missing_functions=missing_fns,
+                    feedback=""
                 )
                 all_modules_done = False
                 continue
@@ -597,12 +599,14 @@ def refinement_loop(tmp_root,llm,project_root: str, max_iter: int = 10, min_cov:
             # CASE 2: Test file exists but coverage < threshold → refine
             if module_cov < min_cov:
                 print(f"[REFINE] {module_name} coverage {module_cov}% < {min_cov}%. Refining tests.")
+                feedback=f"[REFINE] {module_name} coverage {module_cov}% < {min_cov}%. Refining tests to increase coverage to {min_cov}% or higher."
                 generate_tests_for_module(
                     tmp_root=tmp_root,
                     module_name=module_name,
                     llm=llm,
                     error_output=module_error_output,
                     missing_functions=missing_fns,
+                    feedback=feedback
                 )
                 all_modules_done = False
                 continue
@@ -690,6 +694,7 @@ def generate_tests_for_module(
     llm,
     error_output: str,
     missing_functions: list[str],
+    feedback: str
 ):
     """
     Generate or refine tests for a single module using the refinement prompt.
@@ -731,6 +736,7 @@ def generate_tests_for_module(
         error_categories=error_categories or "[]",
         missing_functions=missing_functions or "[]",
         signature_mismatches=signature_mismatches or "[]",
+        feedback=feedback or "No additional feedback."
     )
 
     new_tests = llm(prompt)
@@ -994,6 +1000,8 @@ Rewrite the ENTIRE test file for module "{module_name}" so that:
 - coverage improves
 - the file is valid pytest code
 
+Additional feedback:
+{feedback}
 Output ONLY the final test file.
 """
 
