@@ -10,10 +10,11 @@ def test_cart_init_starts_empty():
     assert cart.total_items() == 0
 
 
-def test_add_item_with_default_quantity():
+def test_add_item_with_default_quantity_returns_none_and_updates_state():
     from src.cart import Cart
 
     cart = Cart()
+
     result = cart.add_item(1)
 
     assert result is None
@@ -21,10 +22,11 @@ def test_add_item_with_default_quantity():
     assert cart.total_items() == 1
 
 
-def test_add_item_with_explicit_quantity_and_accumulates():
+def test_add_item_with_explicit_quantity_accumulates_for_same_product():
     from src.cart import Cart
 
     cart = Cart()
+
     cart.add_item(10, 3)
     cart.add_item(10, 4)
 
@@ -36,6 +38,7 @@ def test_add_item_multiple_products_updates_total_items():
     from src.cart import Cart
 
     cart = Cart()
+
     cart.add_item(1, 2)
     cart.add_item(2, 3)
     cart.add_item(3)
@@ -48,6 +51,7 @@ def test_add_item_accepts_zero_and_negative_product_ids():
     from src.cart import Cart
 
     cart = Cart()
+
     cart.add_item(0, 3)
     cart.add_item(-1, 2)
 
@@ -69,7 +73,7 @@ def test_add_item_raises_for_non_positive_quantity_and_preserves_state(qty):
     assert cart.total_items() == 2
 
 
-def test_remove_item_deletes_existing_product():
+def test_remove_item_deletes_existing_product_and_returns_none():
     from src.cart import Cart
 
     cart = Cart()
@@ -112,6 +116,7 @@ def test_remove_item_then_readd_same_product():
     from src.cart import Cart
 
     cart = Cart()
+
     cart.add_item(9, 2)
     cart.remove_item(9)
     cart.add_item(9, 5)
@@ -124,6 +129,7 @@ def test_total_items_returns_sum_after_multiple_operations():
     from src.cart import Cart
 
     cart = Cart()
+
     cart.add_item(1, 2)
     cart.add_item(2, 5)
     cart.add_item(1, 3)
@@ -189,6 +195,7 @@ def test_sequence_of_operations_produces_expected_final_state():
     from src.cart import Cart
 
     cart = Cart()
+
     cart.add_item(1, 2)
     cart.add_item(2, 1)
     cart.add_item(1, 3)
