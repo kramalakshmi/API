@@ -1,6 +1,9 @@
 MODULE_REFINEMENT_PROMPT = """
 You are a test‑generation and test‑refinement engine.
 
+Project‑structure analysis:
+{scenario_hints}
+
 Your job is to FIX and REWRITE the test file for the module "{module_name}" so that:
 - all syntax errors are removed
 - imports are correct
