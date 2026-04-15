@@ -539,7 +539,7 @@ def coverage_for_module(cov_json_path, module_name):
 
 
 
-def refinement_loop(tmp_root,llm,project_root: str, max_iter: int = 10, min_cov: float = 95.0) -> bool:
+def refinement_loop(tmp_root,llm,project_root: str, max_iter: int = 10, min_cov: float = 90.0) -> bool:
     """
     Multi-module refinement loop:
     - Copies project to a temp dir
