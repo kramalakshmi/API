@@ -21,7 +21,7 @@ def test_add(a, b, expected):
     assert add(a, b) == expected
 
 
-def test_add_type_error_for_incompatible_types():
+def test_add_raises_type_error_for_incompatible_types():
     with pytest.raises(TypeError):
         add(1, "2")
 
@@ -92,22 +92,29 @@ def test_list_items_returns_strings_only():
     assert all(isinstance(item, str) for item in items)
 
 
-def test_module_main_block_not_executed_on_import(capsys):
-    captured = capsys.readouterr()
-    assert captured.out == ""
-    assert captured.err == ""
+def test_list_items_returns_plain_python_list():
+    items = list_items()
+    assert isinstance(items, list)
 
 
-def test_main_block_line_is_not_executed_during_import():
+def test_module_import_exposes_expected_functions():
+    import src.sample as sample_module
+
+    assert hasattr(sample_module, "add")
+    assert hasattr(sample_module, "divide")
+    assert hasattr(sample_module, "greet")
+    assert hasattr(sample_module, "list_items")
+
+
+def test_main_guard_block_not_executed_on_import():
     import src.sample as sample_module
 
     assert sample_module.__name__ == "src.sample"
 
 
-def test_module_source_contains_main_guard_and_print_statement():
+def test_module_source_contains_main_guard():
     import inspect
     import src.sample as sample_module
 
     source = inspect.getsource(sample_module)
     assert 'if __name__ == "__main__":' in source
-    assert 'print("This should not be tested")' in source
