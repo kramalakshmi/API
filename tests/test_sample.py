@@ -1,6 +1,9 @@
+import inspect
+
 import pytest
 
 from src.sample import add, divide, greet, list_items
+import src.sample as sample_module
 
 
 @pytest.mark.parametrize(
@@ -98,23 +101,21 @@ def test_list_items_returns_plain_python_list():
 
 
 def test_module_import_exposes_expected_functions():
-    import src.sample as sample_module
-
     assert hasattr(sample_module, "add")
     assert hasattr(sample_module, "divide")
     assert hasattr(sample_module, "greet")
     assert hasattr(sample_module, "list_items")
 
 
-def test_main_guard_block_not_executed_on_import():
-    import src.sample as sample_module
-
+def test_module_name_on_import():
     assert sample_module.__name__ == "src.sample"
 
 
 def test_module_source_contains_main_guard():
-    import inspect
-    import src.sample as sample_module
-
     source = inspect.getsource(sample_module)
     assert 'if __name__ == "__main__":' in source
+
+
+def test_module_source_contains_print_in_main_guard():
+    source = inspect.getsource(sample_module)
+    assert 'print("This should not be tested")' in source
