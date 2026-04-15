@@ -592,7 +592,7 @@ def refinement_loop(tmp_root,llm,project_root: str, max_iter: int = 10, min_cov:
 
             missing_fns = missing_functions_for_module(cov_json_path, module_name)
             #classification = env_fix.classify_module(module_name, module_source)
-            module_class = env_fix.classify_module(module_name, module_source)
+            module_class = moduleClassification.classify_module(module_name, module_source)
 
             # Skip modules that should not be tested
             if module_class == "SKIP":
