@@ -1,5 +1,7 @@
+import inspect
 import pytest
 
+import src.sample as sample_module
 from src.sample import add, divide, greet, list_items
 
 
@@ -21,7 +23,7 @@ def test_add(a, b, expected):
     assert add(a, b) == expected
 
 
-def test_add_type_error_for_incompatible_types():
+def test_add_raises_type_error_for_incompatible_types():
     with pytest.raises(TypeError):
         add(1, "2")
 
@@ -66,7 +68,6 @@ def test_list_items_returns_expected_list():
 def test_list_items_returns_new_list_each_time():
     first = list_items()
     second = list_items()
-
     assert first == second
     assert first is not second
 
@@ -74,13 +75,11 @@ def test_list_items_returns_new_list_each_time():
 def test_list_items_modifying_return_value_does_not_affect_future_calls():
     items = list_items()
     items.append("dragonfruit")
-
     assert list_items() == ["apple", "banana", "carrot"]
 
 
 def test_list_items_contents_and_order():
     items = list_items()
-
     assert len(items) == 3
     assert items[0] == "apple"
     assert items[1] == "banana"
@@ -92,22 +91,16 @@ def test_list_items_returns_strings_only():
     assert all(isinstance(item, str) for item in items)
 
 
-def test_module_main_block_not_executed_on_import(capsys):
-    captured = capsys.readouterr()
-    assert captured.out == ""
-    assert captured.err == ""
-
-
-def test_main_block_line_is_not_executed_during_import():
-    import src.sample as sample_module
-
+def test_module_name_on_import():
     assert sample_module.__name__ == "src.sample"
 
 
 def test_module_source_contains_main_guard_and_print_statement():
-    import inspect
-    import src.sample as sample_module
-
     source = inspect.getsource(sample_module)
     assert 'if __name__ == "__main__":' in source
     assert 'print("This should not be tested")' in source
+
+
+def test_module_file_can_be_compiled():
+    source = inspect.getsource(sample_module)
+    compile(source, "sample.py", "exec")
