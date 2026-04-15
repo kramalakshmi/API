@@ -14,7 +14,7 @@ from coverage import Coverage
 import shutil
 import json
 import textwrap
-import env_fix
+import moduleClassification
 import prompt
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
