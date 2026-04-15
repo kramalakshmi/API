@@ -62,4 +62,5 @@ Examples:
 - Postgres
 - AWS
 - Kafka
+  
 Your agent must detect and mock external dependencies.
