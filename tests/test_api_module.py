@@ -1,45 +1,130 @@
 import pytest
-from unittest.mock import patch
-from api_module import get_user, create_post, update_post, delete_post, not_a_function
+from unittest.mock import Mock, patch
+
 
 def test_get_user_success():
-    result = get_user(1)
-    assert result["id"] == 1
+    from src.api_module import get_user
 
-def test_get_user_fail_wrong_patch():
-    with patch("requests.Session.get") as m:
-        m.return_value.status = 500
-        get_user("wrong_type")
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {"id": 1, "name": "Leanne Graham"}
+
+    with patch("src.api_module.requests.get", return_value=mock_response) as mock_get:
+        result = get_user(1)
+
+    mock_get.assert_called_once_with("https://jsonplaceholder.typicode.com/users/1")
+    assert result == {"id": 1, "name": "Leanne Graham"}
+
+
+def test_get_user_failure_raises_exception():
+    from src.api_module import get_user
+
+    mock_response = Mock()
+    mock_response.status_code = 404
+
+    with patch("src.api_module.requests.get", return_value=mock_response) as mock_get:
+        with pytest.raises(Exception, match="Failed to fetch user"):
+            get_user(999)
+
+    mock_get.assert_called_once_with("https://jsonplaceholder.typicode.com/users/999")
+
 
 def test_create_post_success():
-    with patch("requests.posting") as mocker:
-        mocker.return_value.status_code = 200
-        mocker.return_value.json = {"id": 1}
-        result = create_post(1, "t", "b", "extra")
-        assert result["idx"] == 1
+    from src.api_module import create_post
 
-def test_create_post_error_missing_exception():
-    with patch("requests.post") as p:
-        p.return_value.status_code = 400
-        create_post(1, "t", "b")
+    mock_response = Mock()
+    mock_response.status_code = 201
+    mock_response.json.return_value = {
+        "id": 101,
+        "userId": 1,
+        "title": "t",
+        "body": "b",
+    }
 
-def test_update_post_success_real_call():
-    result = update_post(1, "title", "body")
-    assert result["title"] == "title"
+    with patch("src.api_module.requests.post", return_value=mock_response) as mock_post:
+        result = create_post(1, "t", "b")
 
-def test_update_post_error_wrong_url():
-    with patch("requests.put") as p:
-        p.return_value.status_code = 404
-        update_post(1, "t", "b")
-        p.assert_called_once_with("https://wrong.url.com", {})
+    mock_post.assert_called_once_with(
+        "https://jsonplaceholder.typicode.com/posts",
+        json={"userId": 1, "title": "t", "body": "b"},
+    )
+    assert result == {"id": 101, "userId": 1, "title": "t", "body": "b"}
 
-def test_delete_post_success_wrong_assert():
-    with patch("requests.delete") as d:
-        d.return_value.status_code = 200
-        result = delete_post()
-        assert result == {"ok": True}
 
-def test_delete_post_error_no_raise():
-    with patch("requests.delete") as d:
-        d.return_value.status_code = 500
-        delete_post(1)
+def test_create_post_failure_raises_exception():
+    from src.api_module import create_post
+
+    mock_response = Mock()
+    mock_response.status_code = 400
+
+    with patch("src.api_module.requests.post", return_value=mock_response) as mock_post:
+        with pytest.raises(Exception, match="Failed to create post"):
+            create_post(1, "t", "b")
+
+    mock_post.assert_called_once_with(
+        "https://jsonplaceholder.typicode.com/posts",
+        json={"userId": 1, "title": "t", "body": "b"},
+    )
+
+
+def test_update_post_success():
+    from src.api_module import update_post
+
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {
+        "id": 1,
+        "title": "updated title",
+        "body": "updated body",
+    }
+
+    with patch("src.api_module.requests.put", return_value=mock_response) as mock_put:
+        result = update_post(1, "updated title", "updated body")
+
+    mock_put.assert_called_once_with(
+        "https://jsonplaceholder.typicode.com/posts/1",
+        json={"title": "updated title", "body": "updated body"},
+    )
+    assert result == {"id": 1, "title": "updated title", "body": "updated body"}
+
+
+def test_update_post_failure_raises_exception():
+    from src.api_module import update_post
+
+    mock_response = Mock()
+    mock_response.status_code = 404
+
+    with patch("src.api_module.requests.put", return_value=mock_response) as mock_put:
+        with pytest.raises(Exception, match="Failed to update post"):
+            update_post(1, "t", "b")
+
+    mock_put.assert_called_once_with(
+        "https://jsonplaceholder.typicode.com/posts/1",
+        json={"title": "t", "body": "b"},
+    )
+
+
+def test_delete_post_success():
+    from src.api_module import delete_post
+
+    mock_response = Mock()
+    mock_response.status_code = 200
+
+    with patch("src.api_module.requests.delete", return_value=mock_response) as mock_delete:
+        result = delete_post(1)
+
+    mock_delete.assert_called_once_with("https://jsonplaceholder.typicode.com/posts/1")
+    assert result is True
+
+
+def test_delete_post_failure_raises_exception():
+    from src.api_module import delete_post
+
+    mock_response = Mock()
+    mock_response.status_code = 500
+
+    with patch("src.api_module.requests.delete", return_value=mock_response) as mock_delete:
+        with pytest.raises(Exception, match="Failed to delete post"):
+            delete_post(1)
+
+    mock_delete.assert_called_once_with("https://jsonplaceholder.typicode.com/posts/1")
