@@ -12,6 +12,7 @@ from coverage import Coverage
 import shutil
 import json
 import textwrap
+import env_fix
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 MODEL = "gpt-5.4"
@@ -580,7 +581,27 @@ def refinement_loop(tmp_root,llm,project_root: str, max_iter: int = 10, min_cov:
             # Extract module-specific error output (you can refine this if you want)
             module_error_output = stderr
 
+            src_path = os.path.join(tmp_root, "src", f"{module_name}.py")
+    
+
+            with open(src_path, "r", encoding="utf-8") as f:
+                module_source = f.read()
+
             missing_fns = missing_functions_for_module(cov_json_path, module_name)
+            #classification = env_fix.classify_module(module_name, module_source)
+            module_class = env_fix.classify_module(module_name, module_source)
+
+            # Skip modules that should not be tested
+            if module_class == "SKIP":
+                print(f"[SKIP] {module_name} (initializer or CLI)")
+                continue
+
+            # Generate tests with config fixtures if needed
+            if module_class == "CONFIG_REQUIRED":
+                print(f"[INFO] {module_name} requires config neutralization")
+                config_fixtures =env_fix.CONFIG_FIXTURE_TEMPLATE.format(module_name=module_name)
+            else:
+                config_fixtures = ""
 
             # CASE 1: No test file → create new tests
             if not os.path.exists(test_path):
@@ -739,7 +760,7 @@ def generate_tests_for_module(
         signature_mismatches=signature_mismatches or "[]",
         feedback=feedback or "No additional feedback."
     )
-    #print("Prompt for LLM:\n", prompt)
+    print("Prompt for LLM:\n", prompt)
     new_tests = llm(prompt)
     new_tests = textwrap.dedent(new_tests).strip()
 
@@ -747,68 +768,7 @@ def generate_tests_for_module(
         f.write(new_tests + "\n")
 
 
-MODULE_PROMPT = """
-You are generating or fixing pytest tests for a single module.
 
-==========================
-MODULE NAME
-==========================
-{module_name}
-
-==========================
-MODULE SOURCE CODE
-==========================
-{module_source}
-
-==========================
-CURRENT TEST FILE (if exists)
-==========================
-{test_file}
-
-==========================
-PYTEST ERROR OUTPUT (for this module)
-==========================
-{error_output}
-
-==========================
-MISSING FUNCTIONS (from coverage)
-==========================
-{missing_functions}
-
-==========================
-MANDATORY RULES
-==========================
-
-1. Output MUST be valid Python ONLY.
-   - No Markdown.
-   - No backticks.
-   - No code fences.
-
-2. The test file MUST begin with this exact header:
-
-import sys
-import os
-PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-if PROJECT_ROOT not in sys.path:
-    sys.path.insert(0, PROJECT_ROOT)
-
-3. All imports MUST use:
-   from src.{module_name} import <symbol>
-
-4. NEVER use:
-   import {module_name}
-   from {module_name} import X
-   import src
-   import src.{module_name}
-   sys.path.append("src")
-
-5. Generate tests for ALL functions and methods in this module.
-6. Include normal cases, edge cases, and exception cases.
-7. Tests must be deterministic and minimal.
-8. Output MUST be a single complete pytest file for this module.
-
-Now regenerate the full corrected test file for this module.
-"""
 
 def copy_tests_from_tmp(tmp_root, real_project_root):
     """
@@ -990,8 +950,30 @@ Wrong:
 Correct:
     result = add_item(cart={{}}, item_id=1, qty=1)
 
+    
 ============================================================
-### 9. NOW REWRITE THE TEST FILE
+### 9. PROJECT-STRUCTURE RULES (Based on Classification)
+============================================================
+
+- If module_class == "CONFIG_REQUIRED":
+  - Add fixtures that mock environment variables and config files.
+  - Avoid relying on real external services or real credentials.
+
+- If module_class == "SIDE_EFFECT":
+  - Avoid importing the module at top-level in tests.
+  - Import the module inside test functions when necessary.
+  - Avoid triggering dangerous side effects (network, filesystem, long sleeps).
+
+- If module_class == "OPTIONAL_DEP":
+  - Write tests that handle both cases: dependency present and dependency absent.
+  - Do not import heavy optional dependencies directly if not needed.
+
+- If module_class == "HEAVY":
+  - Prefer minimal, focused tests that exercise core behavior without heavy setup.
+
+
+============================================================
+### 10. NOW REWRITE THE TEST FILE
 ============================================================
 
 Rewrite the ENTIRE test file for module "{module_name}" so that:
