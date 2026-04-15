@@ -6,11 +6,9 @@ from src.products import PRODUCTS, get_product, list_products
 @pytest.fixture(autouse=True)
 def restore_products():
     original = {key: value.copy() for key, value in PRODUCTS.items()}
-    try:
-        yield
-    finally:
-        PRODUCTS.clear()
-        PRODUCTS.update({key: value.copy() for key, value in original.items()})
+    yield
+    PRODUCTS.clear()
+    PRODUCTS.update({key: value.copy() for key, value in original.items()})
 
 
 @pytest.mark.parametrize(
