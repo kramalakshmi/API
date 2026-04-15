@@ -24,7 +24,7 @@ auth = Auth.Token(TOKEN)
 AGENT_DIR = os.path.abspath(os.path.dirname(__file__))
 PROJECT_ROOT = os.path.abspath(os.path.join(AGENT_DIR, ".."))
 max_attempts=5
-
+BRANCH_NAME = "classify_module"
 
 
 ERROR_PATTERNS = {
@@ -842,14 +842,14 @@ def copy_tests_from_tmp(tmp_root, real_project_root):
                 
                 try:
             
-                    existing = repo.get_contents(dst,ref="syntax_error_refine")
+                    existing = repo.get_contents(dst,ref=BRANCH_NAME)
                     
                     repo.update_file(
-                        dst, "Update generated tests", test_code, existing.sha, branch= "syntax_error_refine"
+                        dst, "Update generated tests", test_code, existing.sha, branch= BRANCH_NAME
                     )
                 except Exception as ex:
                     repo.create_file(
-                        dst, "Add generated tests", test_code , branch= "syntax_error_refine"
+                        dst, "Add generated tests", test_code , branch= BRANCH_NAME
                     )
                 
                 
