@@ -593,6 +593,7 @@ def refinement_loop(tmp_root,llm,project_root: str, max_iter: int = 10, min_cov:
             missing_fns = missing_functions_for_module(cov_json_path, module_name)
             #classification = env_fix.classify_module(module_name, module_source)
             module_class = moduleClassification.classify_module(module_name, module_source)
+            error_categories = classify_errors(module_error_output, stdout)
 
             # Skip modules that should not be tested
             if module_class == "SKIP":
@@ -602,7 +603,7 @@ def refinement_loop(tmp_root,llm,project_root: str, max_iter: int = 10, min_cov:
             # Generate tests with config fixtures if needed
             if module_class == "CONFIG_REQUIRED":
                 print(f"[INFO] {module_name} requires config neutralization")
-                config_fixtures =env_fix.CONFIG_FIXTURE_TEMPLATE.format(module_name=module_name)
+                config_fixtures =moduleClassification.CONFIG_FIXTURE_TEMPLATE.format(module_name=module_name)
             else:
                 config_fixtures = ""
 
@@ -636,6 +637,9 @@ def refinement_loop(tmp_root,llm,project_root: str, max_iter: int = 10, min_cov:
                 generate_tests_for_module(
                     tmp_root=tmp_root,
                     module_name=module_name,
+                    module_class=module_class,
+                    scenario_hints=scenario_hints,
+                    error_categories=error_categories,
                     llm=llm,
                     error_output=module_error_output,
                     missing_functions=missing_fns,
@@ -679,6 +683,9 @@ def load_module_source(tmp_root, module_name):
 def generate_tests_for_module(
     tmp_root: str,
     module_name: str,
+    module_class: str,
+    scenario_hints: str,
+    error_categories: list[str],
     llm,
     error_output: str,
     missing_functions: list[str],
@@ -713,12 +720,13 @@ def generate_tests_for_module(
         signature_mismatches = []
 
     # Classify error categories from pytest output
-    error_categories = classify_errors(error_output, "")
+    #error_categories = classify_errors(error_output, "")
     print(f"Detected error categories for module '{module_name}': {error_categories}")
     print(f"Detected missing_functions '{missing_functions}': {signature_mismatches}")
     prompt_text = prompt.MODULE_REFINEMENT_PROMPT.format(
         module_name=module_name,
         module_source=module_source,
+        scenario_hints=scenario_hints,
         test_file=test_source or "# No tests yet. Create a new pytest file.",
         error_output=error_output or "No error output available.",
         error_categories=error_categories or "[]",
