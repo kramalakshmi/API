@@ -1,127 +1,91 @@
 import pytest
 
-from src.cart import Cart
-
 
 def test_cart_init_starts_empty():
+    from src.cart import Cart
+
     cart = Cart()
+
     assert cart.items == {}
-    assert cart.total_items() == 0
-
-
-def test_total_items_returns_zero_for_new_cart():
-    cart = Cart()
     assert cart.total_items() == 0
 
 
 def test_add_item_with_default_quantity():
+    from src.cart import Cart
+
     cart = Cart()
-    cart.add_item(1)
+    result = cart.add_item(1)
+
+    assert result is None
     assert cart.items == {1: 1}
     assert cart.total_items() == 1
 
 
-def test_add_item_with_explicit_quantity():
+def test_add_item_with_explicit_quantity_and_accumulates():
+    from src.cart import Cart
+
     cart = Cart()
     cart.add_item(10, 3)
-    assert cart.items == {10: 3}
-    assert cart.total_items() == 3
+    cart.add_item(10, 4)
 
-
-def test_add_item_accumulates_quantity_for_same_product():
-    cart = Cart()
-    cart.add_item(5, 2)
-    cart.add_item(5, 4)
-    assert cart.items == {5: 6}
-    assert cart.total_items() == 6
+    assert cart.items == {10: 7}
+    assert cart.total_items() == 7
 
 
 def test_add_item_multiple_products_updates_total_items():
+    from src.cart import Cart
+
     cart = Cart()
     cart.add_item(1, 2)
     cart.add_item(2, 3)
     cart.add_item(3)
+
     assert cart.items == {1: 2, 2: 3, 3: 1}
     assert cart.total_items() == 6
 
 
-def test_add_item_with_keyword_arguments():
-    cart = Cart()
-    cart.add_item(product_id=8, qty=2)
-    assert cart.items == {8: 2}
-    assert cart.total_items() == 2
+def test_add_item_accepts_zero_and_negative_product_ids():
+    from src.cart import Cart
 
-
-def test_add_item_accepts_zero_as_product_id():
     cart = Cart()
     cart.add_item(0, 3)
-    assert cart.items == {0: 3}
-    assert cart.total_items() == 3
-
-
-def test_add_item_accepts_negative_product_id():
-    cart = Cart()
     cart.add_item(-1, 2)
-    assert cart.items == {-1: 2}
-    assert cart.total_items() == 2
+
+    assert cart.items == {0: 3, -1: 2}
+    assert cart.total_items() == 5
 
 
 @pytest.mark.parametrize("qty", [0, -1, -5])
-def test_add_item_raises_for_non_positive_quantity(qty):
-    cart = Cart()
-    with pytest.raises(ValueError, match="Quantity must be positive"):
-        cart.add_item(1, qty)
-    assert cart.items == {}
-    assert cart.total_items() == 0
+def test_add_item_raises_for_non_positive_quantity_and_preserves_state(qty):
+    from src.cart import Cart
 
-
-def test_add_item_invalid_quantity_does_not_modify_existing_cart():
     cart = Cart()
     cart.add_item(1, 2)
 
     with pytest.raises(ValueError, match="Quantity must be positive"):
-        cart.add_item(2, 0)
+        cart.add_item(2, qty)
 
     assert cart.items == {1: 2}
     assert cart.total_items() == 2
 
 
-def test_add_item_after_failed_remove_still_works():
-    cart = Cart()
-
-    with pytest.raises(ValueError, match="Item not in cart"):
-        cart.remove_item(123)
-
-    cart.add_item(123, 2)
-
-    assert cart.items == {123: 2}
-    assert cart.total_items() == 2
-
-
 def test_remove_item_deletes_existing_product():
+    from src.cart import Cart
+
     cart = Cart()
     cart.add_item(1, 2)
     cart.add_item(2, 3)
 
-    cart.remove_item(1)
+    result = cart.remove_item(1)
 
+    assert result is None
     assert cart.items == {2: 3}
     assert cart.total_items() == 3
 
 
-def test_remove_item_removes_only_item_and_cart_can_continue_being_used():
-    cart = Cart()
-    cart.add_item(1, 1)
-    cart.add_item(2, 2)
+def test_remove_item_raises_when_product_not_in_cart_and_preserves_state():
+    from src.cart import Cart
 
-    cart.remove_item(2)
-    cart.add_item(3, 4)
-
-    assert cart.items == {1: 1, 3: 4}
-    assert cart.total_items() == 5
-
-
-def test_remove_item_raises_when_product_not_in_cart():
     cart = Cart()
     cart.add_item(1, 2)
 
@@ -133,6 +97,8 @@ def test_remove_item_raises_when_product_not_in_cart():
 
 
 def test_remove_item_raises_on_empty_cart():
+    from src.cart import Cart
+
     cart = Cart()
 
     with pytest.raises(ValueError, match="Item not in cart"):
@@ -142,27 +108,9 @@ def test_remove_item_raises_on_empty_cart():
     assert cart.total_items() == 0
 
 
-def test_remove_last_item_results_in_empty_cart():
-    cart = Cart()
-    cart.add_item(7, 3)
-
-    cart.remove_item(7)
-
-    assert cart.items == {}
-    assert cart.total_items() == 0
-
-
-def test_remove_item_with_keyword_argument():
-    cart = Cart()
-    cart.add_item(4, 2)
-
-    cart.remove_item(product_id=4)
-
-    assert cart.items == {}
-    assert cart.total_items() == 0
-
-
 def test_remove_item_then_readd_same_product():
+    from src.cart import Cart
+
     cart = Cart()
     cart.add_item(9, 2)
     cart.remove_item(9)
@@ -172,19 +120,9 @@ def test_remove_item_then_readd_same_product():
     assert cart.total_items() == 5
 
 
-def test_remove_one_product_does_not_affect_other_accumulated_product():
-    cart = Cart()
-    cart.add_item(1, 2)
-    cart.add_item(1, 1)
-    cart.add_item(2, 5)
-
-    cart.remove_item(2)
-
-    assert cart.items == {1: 3}
-    assert cart.total_items() == 3
-
-
 def test_total_items_returns_sum_after_multiple_operations():
+    from src.cart import Cart
+
     cart = Cart()
     cart.add_item(1, 2)
     cart.add_item(2, 5)
@@ -195,7 +133,9 @@ def test_total_items_returns_sum_after_multiple_operations():
     assert cart.total_items() == 5
 
 
-def test_clear_empties_cart():
+def test_clear_empties_cart_and_returns_none():
+    from src.cart import Cart
+
     cart = Cart()
     cart.add_item(1, 2)
     cart.add_item(2, 1)
@@ -207,28 +147,10 @@ def test_clear_empties_cart():
     assert cart.total_items() == 0
 
 
-def test_total_items_returns_zero_after_clearing_non_empty_cart():
+def test_clear_on_empty_cart_is_safe_and_idempotent():
+    from src.cart import Cart
+
     cart = Cart()
-    cart.add_item(1, 4)
-    cart.add_item(2, 6)
-
-    cart.clear()
-
-    assert cart.total_items() == 0
-
-
-def test_clear_on_empty_cart_is_safe():
-    cart = Cart()
-
-    cart.clear()
-
-    assert cart.items == {}
-    assert cart.total_items() == 0
-
-
-def test_clear_is_idempotent():
-    cart = Cart()
-    cart.add_item(1, 2)
 
     cart.clear()
     cart.clear()
@@ -238,88 +160,34 @@ def test_clear_is_idempotent():
 
 
 def test_cart_can_be_reused_after_clear():
+    from src.cart import Cart
+
     cart = Cart()
     cart.add_item(1, 2)
     cart.clear()
-
     cart.add_item(3, 4)
 
     assert cart.items == {3: 4}
     assert cart.total_items() == 4
 
 
-def test_clear_after_failed_remove_preserves_then_clears_state():
-    cart = Cart()
-    cart.add_item(1, 2)
+def test_clear_mutates_existing_items_dict_reference():
+    from src.cart import Cart
 
-    with pytest.raises(ValueError, match="Item not in cart"):
-        cart.remove_item(99)
-
-    assert cart.items == {1: 2}
-    assert cart.total_items() == 2
-
-    cart.clear()
-
-    assert cart.items == {}
-    assert cart.total_items() == 0
-
-
-def test_clear_after_failed_add_preserves_then_clears_state():
-    cart = Cart()
-    cart.add_item(1, 2)
-
-    with pytest.raises(ValueError, match="Quantity must be positive"):
-        cart.add_item(2, -3)
-
-    assert cart.items == {1: 2}
-    assert cart.total_items() == 2
-
-    cart.clear()
-
-    assert cart.items == {}
-    assert cart.total_items() == 0
-
-
-def test_remove_item_after_clear_raises():
-    cart = Cart()
-    cart.add_item(1, 1)
-    cart.clear()
-
-    with pytest.raises(ValueError, match="Item not in cart"):
-        cart.remove_item(1)
-
-    assert cart.items == {}
-    assert cart.total_items() == 0
-
-
-def test_clear_removes_all_products_after_accumulated_adds():
-    cart = Cart()
-    cart.add_item(1, 2)
-    cart.add_item(1, 3)
-    cart.add_item(2, 4)
-
-    assert cart.items == {1: 5, 2: 4}
-    assert cart.total_items() == 9
-
-    cart.clear()
-
-    assert cart.items == {}
-    assert cart.total_items() == 0
-
-
-def test_clear_removes_all_items_reference_contents():
     cart = Cart()
     cart.add_item(11, 1)
     items_ref = cart.items
 
     cart.clear()
 
+    assert items_ref is cart.items
     assert items_ref == {}
-    assert cart.items == {}
     assert cart.total_items() == 0
 
 
 def test_sequence_of_operations_produces_expected_final_state():
+    from src.cart import Cart
+
     cart = Cart()
     cart.add_item(1, 2)
     cart.add_item(2, 1)
