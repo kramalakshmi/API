@@ -3,12 +3,11 @@ Examples:
 - markdown
 - explanations
 - JSON
-Your agent must sanitize output.
+
 
 
 Repository‑Level Scenarios
-These appear only when running on real repos.
-6.1 Modules that should not be tested
+Modules that should not be tested
 Examples:
 - __init__.py
 - data files
@@ -19,6 +18,7 @@ Coverage never reaches threshold because:
 - module is too complex
 - LLM keeps hallucinating
 - missing functions are untestable
+- modules contanining only print statements and __main__ module
 Your agent must detect “unreachable coverage” and stop.
 
 
@@ -38,13 +38,12 @@ Your signature detector must be hardened.
 
 Human‑Code Scenarios
 Real developers write messy code.
-8.1 Functions with misleading names
+Functions with misleading names
 Example:
 def add(a, b):
     return a - b
-
-
 Your agent must infer behavior from source, not name.
+
 Pytest Runtime Scenarios	
 	infinite loops
 	waiting for network
