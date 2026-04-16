@@ -27,7 +27,7 @@ def test_get_product_returns_same_object_from_products_mapping():
     assert get_product(1) is PRODUCTS[1]
 
 
-@pytest.mark.parametrize("product_id", [0, 4, -1, 999, "1", None, (1,), False])
+@pytest.mark.parametrize("product_id", [0, 4, -1, 999, "1", None, (1,)])
 def test_get_product_raises_value_error_for_missing_product_ids(product_id):
     with pytest.raises(ValueError, match="Product not found"):
         get_product(product_id)
@@ -45,6 +45,11 @@ def test_get_product_accepts_bool_true_as_key_equivalent_to_1():
 
 def test_get_product_accepts_float_one_as_key_equivalent_to_1():
     assert get_product(1.0) is PRODUCTS[1]
+
+
+def test_get_product_false_raises_value_error():
+    with pytest.raises(ValueError, match="Product not found"):
+        get_product(False)
 
 
 def test_get_product_on_empty_products_raises_value_error():
