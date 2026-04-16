@@ -148,6 +148,7 @@ def test_total_items_returns_zero_after_clearing_non_empty_cart():
 
     cart.clear()
 
+    assert cart.items == {}
     assert cart.total_items() == 0
 
 
