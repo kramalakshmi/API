@@ -139,6 +139,18 @@ def test_total_items_returns_sum_after_multiple_operations():
     assert cart.total_items() == 5
 
 
+def test_total_items_returns_zero_after_clearing_non_empty_cart():
+    from src.cart import Cart
+
+    cart = Cart()
+    cart.add_item(1, 4)
+    cart.add_item(2, 6)
+
+    cart.clear()
+
+    assert cart.total_items() == 0
+
+
 def test_clear_empties_cart_and_returns_none():
     from src.cart import Cart
 
